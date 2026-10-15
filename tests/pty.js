@@ -26,14 +26,27 @@ export function brainWithTty(args, { cwd, env = {}, answer = 'code', timeoutMs =
     let output = '';
     let answered = false;
     const timer = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
+    let closed = false;
+    const closeInput = () => {
+      if (!closed) {
+        closed = true;
+        child.stdin.end();
+      }
+    };
     const onData = (d) => {
       output += d.toString();
       const m = output.match(/Type ([A-Z0-9]{6}) and press Enter/);
       if (m && !answered) {
         answered = true;
-        if (answer !== null) child.stdin.write(`${answer === 'code' ? m[1] : answer}\n`);
-        child.stdin.end();
+        if (answer === null) closeInput();
+        else {
+          child.stdin.write(`${answer === 'code' ? m[1] : answer}\n`);
+          // Closing stdin right away can deliver EOF to the pseudo-terminal before the typed line is read (seen on a
+          // slower macOS CI runner). Keep it open until the CLI has consumed the answer; fallback after 5 s.
+          setTimeout(closeInput, 5000).unref();
+        }
       }
+      if (answered && /\b(Approved|Cancelled)\./.test(output)) closeInput();
     };
     child.stdout.on('data', onData);
     child.stderr.on('data', onData);
