@@ -45,7 +45,7 @@ test('scanner has no high/medium false positives on the clean fixture or on firs
 test('all first-party skills pass validation', () => {
   const { errors, skills } = validateAll();
   assert.deepEqual(errors, []);
-  assert.equal(skills.length, 17);
+  assert.equal(skills.length, 21);
 });
 
 test('validator rejects spec violations', () => {

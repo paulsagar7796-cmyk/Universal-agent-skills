@@ -28,7 +28,8 @@ node --test tests/*.test.js
 
 ## Rules
 
-- Do not add runtime dependencies or npm lifecycle scripts (`preinstall`, `postinstall`, `prepare`, …).
+- Do not add runtime dependencies or npm lifecycle scripts (`preinstall`, `postinstall`, `prepare`, …). Skill helper
+  scripts in Python must use the standard library only, read local files, and send nothing over the network.
 - Nothing may execute on clone/install. Only `brain setup` may change agent configuration, and only after consent.
 - Hooks must exit 0 except PreToolUse blocking (exit 2) of denied/unapproved capabilities, policy-integrity failures and
   the self-approval/policy-edit guard. Keep them bounded and silent in folders without `.agent-brain/`.

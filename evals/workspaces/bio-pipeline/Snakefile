@@ -1,0 +1,14 @@
+configfile: "config/config.yaml"
+
+rule all:
+    input: "results/sample.vcf.gz"
+
+rule align:
+    input: ref=config["reference"], r1="data/sample_R1.fastq"
+    output: "results/sample.bam"
+    shell: "bwa mem {input.ref} {input.r1} | samtools sort -o {output}"
+
+rule call:
+    input: bam="results/sample.bam", known=config["known_sites"]
+    output: "results/sample.vcf.gz"
+    shell: "bcftools mpileup -f {config[reference]} {input.bam} | bcftools call -mv -Oz -o {output}"

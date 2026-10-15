@@ -18,6 +18,8 @@ and intended to be committed. `local/` is machine-local runtime state and is git
 | `plans/PLAN-YYYY-MM-DD-<slug>.md` | Task plans | agents (task-planner skill) |
 | `handoffs/YYYY-MM-DD-HHMM-<slug>.md` | Restart notes (UTC timestamps) | `brain handoff` |
 | `evidence/` | Small artifacts referenced by facts | anyone |
+| `experiments/EXP-NNNN.yaml` | Experiment runs: question, baseline, code commit, config/data fingerprints, split, seeds, environment, metrics read from result files (path + hash), computed comparisons, conclusion | `brain exp` |
+| `papers/<id>.md` | One note per paper (literature-review skill): identifier, source URL, access date, method, results, limitations | agents |
 | `config.yaml` | Context budget, auto-accept policy, retention, routing thresholds | humans |
 | `local/` | `index.sqlite`, `events.jsonl`, `policy/consent.json` + `policy/head.json` (hash-chained consent log), `requests.json` (requests + restrictions), `capabilities.json` (observations), `checkpoints/last.json`, `proposals/`, `backups/`, `install.json`, lock files | controller |
 

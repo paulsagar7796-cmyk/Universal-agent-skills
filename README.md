@@ -5,7 +5,7 @@
 
 Two things for AI coding agents, designed to work together but usable separately:
 
-1. **A portable skill library** — 17 narrow, operational skills in the open [Agent Skills](https://agentskills.io/specification)
+1. **A portable skill library** — 21 narrow, operational skills in the open [Agent Skills](https://agentskills.io/specification)
    format (`SKILL.md`), installable into Claude Code, Codex, Antigravity, Cursor, Gemini CLI, Copilot and others with
    the existing [`skills` CLI](https://github.com/vercel-labs/skills).
 2. **A project brain** — durable, evidence-labelled project memory in plain Markdown/YAML (`.agent-brain/`), plus a
@@ -99,6 +99,7 @@ network listener. Hooks never block the agent except to enforce an explicit deni
 ```
 brain setup [--harden] | repair | uninstall | doctor | runtime status
 brain init | status | context | search <q> | show <id> | audit | index rebuild
+brain exp start | log | finish | compare | list | show
 brain remember | proposals | approve | reject | decide | verify | deprecate | handoff
 brain route "<request>" | capabilities [check <skill>] | consent status|explain|request|deny|revoke|reject | authorize <action>
 brain approve <P-…> | consent approve <R-…> | consent grant <target>      # human only, own terminal
@@ -117,8 +118,20 @@ brain explain-last-run
 | business | business-analyst, prd-writer |
 | research | web-research, source-verification |
 | security | skill-package-audit |
+| ml | ml-experiment |
+| data | data-analysis |
+| science | bioinformatics-pipeline |
+
+`research` also includes `literature-review`.
 
 Full table with capabilities and approvals: [catalog/README.md](catalog/README.md). All are `maturity: draft`.
+
+## For ML, data and research projects
+
+`brain init` understands notebooks, ML/science libraries, data and model folders (names and sizes only), DVC/LFS,
+Snakemake/Nextflow and reference genome builds. `brain exp start|log|finish|compare` keeps a reproducible experiment
+log whose metrics are read only from result files, and compares runs over seeds with a t-test instead of eyeballing.
+See [docs/research-guide.md](docs/research-guide.md).
 
 ## Consent and approvals
 
@@ -152,7 +165,7 @@ Details: [docs/security-model.md](docs/security-model.md). Report vulnerabilitie
 ## Documentation
 
 [Vision & principles](docs/vision-and-principles.md) · [Architecture](docs/architecture.md) · [Threat model](docs/threat-model.md) ·
-[Operations](docs/operations.md) · [Release policy (proposed)](docs/release-policy.md) ·
+[Operations](docs/operations.md) · [Research guide](docs/research-guide.md) · [Release policy (proposed)](docs/release-policy.md) ·
 [Brain spec](docs/brain-spec.md) · [Skill authoring](docs/skill-authoring-guide.md) ·
 [Security model](docs/security-model.md) · [Evaluation](docs/evaluation-guide.md) ·
 [Compatibility](docs/compatibility.md) · [Roadmap](docs/roadmap.md) · [References](docs/references.md) ·

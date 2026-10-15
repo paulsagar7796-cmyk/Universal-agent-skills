@@ -1,0 +1,5 @@
+##fileformat=VCFv4.2
+##reference=hg19
+##contig=<ID=20,length=63025520>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+20	60343	rs527639301	G	A	.	PASS	.

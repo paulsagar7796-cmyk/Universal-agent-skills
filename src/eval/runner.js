@@ -38,7 +38,7 @@ async function pool(items, concurrency, fn) {
 }
 
 function skipReason(c, provider, opts) {
-  if (provider.live && c.requires.some((r) => r.startsWith('web.')) && !opts.allowWeb) return `requires ${c.requires.join(', ')}; re-run with --allow-web to include it`;
+  if (provider.live && c.requires.some((r) => r.startsWith('web.') || r.startsWith('paper.')) && !opts.allowWeb) return `requires ${c.requires.join(', ')} (network access); re-run with --allow-web to include it`;
   return null;
 }
 

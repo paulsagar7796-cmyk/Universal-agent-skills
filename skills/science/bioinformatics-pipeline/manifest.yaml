@@ -1,0 +1,27 @@
+schema_version: 1
+id: bioinformatics-pipeline
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [science]
+  triggers: [fastq, fasta, vcf, bam, variant calling, variant-calling, sequencing, reads, genome, reference genome, snakemake, nextflow, rna-seq, alignment, biopython, bioinformatics, variant, chromosomes]
+  avoid: []
+  pairs_with: [verification-before-completion]
+local_permissions: [filesystem.read, filesystem.write, shell.exec]
+capabilities:
+  required: []
+  optional: []
+approvals: 
+  - action: upload-sensitive-data
+    always_confirm: true
+  - action: download-large-data
+    always_confirm: true
+  - action: run-expensive-compute
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

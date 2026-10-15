@@ -7,6 +7,7 @@ import { fileEvidence, nextFactId } from './facts.js';
 import { replaceGenerated } from './store.js';
 import { git, today, truncate, writeFileAtomic } from './util.js';
 import { redactSecrets } from './secrets.js';
+import { scanResearch } from './research-scan.js';
 
 const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', 'out', 'target', 'vendor', '.venv', 'venv', '__pycache__', '.next', '.nuxt', '.cache', 'coverage', '.agent-brain', '.idea', '.vscode', '.dart_tool', 'Pods', '.gradle', '.terraform']);
 const SENSITIVE = /(^\.env($|\.)|\.pem$|\.key$|^id_[a-z0-9]+$|credentials|secret|\.npmrc$|\.pypirc$|\.netrc$|\.p12$|\.keystore$)/i;
@@ -48,6 +49,7 @@ function census(root, { maxFiles = 20000, maxDepth = 6 } = {}) {
   const ext = {};
   let total = 0;
   const manifests = [];
+  const files = []; // { rel, size } — names and sizes only, for the research scanner
   const walk = (dir, depth) => {
     if (depth > maxDepth || total >= maxFiles) return;
     let ents;
@@ -64,13 +66,19 @@ function census(root, { maxFiles = 20000, maxDepth = 6 } = {}) {
       }
       if (!ent.isFile()) continue;
       total++;
+      const relPath = path.relative(root, path.join(dir, ent.name)).split(path.sep).join('/');
+      try {
+        files.push({ rel: relPath, size: fs.statSync(path.join(dir, ent.name)).size });
+      } catch {
+        /* vanished */
+      }
       const e = path.extname(ent.name).toLowerCase() || ent.name;
       ext[e] = (ext[e] ?? 0) + 1;
       if (depth > 0 && depth <= 3 && ['package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod', 'pubspec.yaml'].includes(ent.name)) manifests.push(path.relative(root, path.join(dir, ent.name)).split(path.sep).join('/'));
     }
   };
   walk(root, 0);
-  return { ext, total, capped: total >= maxFiles, nestedManifests: manifests.sort() };
+  return { ext, total, capped: total >= maxFiles, nestedManifests: manifests.sort(), files };
 }
 
 /** Very small TOML key reader for well-known keys (e.g. [project] name). Returns null when not found. */
@@ -254,6 +262,9 @@ export function scanProject(project, { now = new Date() } = {}) {
   if (c.ext['.ipynb']) notes.types.add('notebooks');
   if ((c.ext['.csv'] ?? 0) + (c.ext['.parquet'] ?? 0) > 5) notes.types.add('data');
   if (c.nestedManifests.length) found.push({ key: 'structure.nested_manifests', category: 'structure', claim: `Nested package manifests found (possible monorepo or sub-projects): ${c.nestedManifests.slice(0, 8).join(', ')}${c.nestedManifests.length > 8 ? ', …' : ''}.`, status: 'observed', evidence: c.nestedManifests.slice(0, 3).map((f) => ev(f)) });
+  // Research / ML / notebook / bioinformatics signals (names, sizes, notebook code cells; never data contents).
+  const addRaw = (fact) => found.push({ ...fact, claim: redactSecrets(fact.claim), evidence: fact.evidence.map((e) => (e.rel ? ev(e.rel, e.locator) : e)) });
+  notes.research = scanResearch(root, c.files, { add, addRaw, notes, date });
   if (!notes.types.size) notes.types.add(c.total === 0 ? 'empty' : 'unclassified');
 
   notes.unknowns.push({ key: 'product.goal', question: notes.readme?.summary ? 'Is the README description an accurate statement of the product goal and target users?' : 'What is the product goal, who are the users, and what does "done" mean?' });

@@ -6,7 +6,7 @@ Two kinds of evaluation exist and must not be confused:
 |---|---|---|
 | Question | Does the keyword router suggest the right skill? | Does an agent using the skill behave as each case expects? |
 | Runs | Offline, in CI (`node scripts/run-evals.js`) | Mock provider offline (tests the harness); real agents live (`scripts/eval.js`) |
-| Result today | 59/59 | **Live: not yet run.** Mock: deterministic harness results only |
+| Result today | 73/73 | **Live: not yet run.** Mock: deterministic harness results only |
 
 ## Behavioural harness
 
@@ -23,7 +23,7 @@ evals/workspaces/<id>/    ──► workspace.js (temp copy + git commit + canar
 
 ```bash
 node scripts/eval.js list [--skill code-review] [--kind untrusted-input] [--json]   # no execution
-node scripts/eval.js run --provider mock --judge mock                               # all 102 cases, offline, ~15 s
+node scripts/eval.js run --provider mock --judge mock                               # all 127 cases, offline, ~20 s
 node scripts/eval.js run --provider mock --skill web-research,source-verification   # subset
 node scripts/eval.js run --provider mock --case se-typical-1,ce-untrusted           # by case id
 node scripts/eval.js run --provider claude-code --case se-typical-1 --dry-run       # show the live plan only
@@ -56,8 +56,8 @@ Pending live run (not executed in this repository yet):
 ```bash
 node scripts/eval.js run --provider claude-code --model haiku --budget 0.25 --concurrency 2 --dry-run   # review plan
 node scripts/eval.js run --provider claude-code --model haiku --budget 0.25 --concurrency 2 --yes
-#   102 cases → 93 agent invocations (9 web cases skipped without --allow-web); worst case 93 × $0.25 = $23.25
-#   add --judge claude-code to grade prose expectations (up to +93 invocations)
+#   127 cases → 116 agent invocations (11 cases needing web/paper access skipped without --allow-web);
+#   worst case 116 × $0.25 = $29.00; add --judge claude-code to grade prose expectations (up to +116 invocations)
 ```
 
 ### How a case is graded
@@ -83,7 +83,7 @@ outside the workspace. They see tool calls and the workspace diff only.
 
 ### Coverage today
 
-102 cases, 181 expectations. 48 expectations have linked structured checks (several partial); 133 need human or judge
+127 cases, 226 expectations. 69 expectations have linked structured checks (several partial); 157 need human or judge
 grading. Cases with a prose `fixture` and no explicit `workspace` run in the skill's default workspace and carry a
 `fixture_note` in results — treat those results with care. Known mismatches (fixture described but not reproduced):
 `pi-ambiguous-home`, `bc-edge-conflict`, `sd-typical-2`, `sd-typical-3`, `sd-edge-noreproduce`, `tdd-typical-2`,
@@ -91,7 +91,7 @@ grading. Cases with a prose `fixture` and no explicit `workspace` run in the ski
 `pi-unsupported-claim`, `vbc-edge-zero-tests`, `vbc-edge-preexisting`, `cr-untrusted-1`, `cr-edge-post`,
 `sr-untrusted-1`, `sa-typical-2`, `de-typical-2`, `sv-edge-dead-link`. Adding workspaces for these is on the roadmap.
 
-The offline mock suite (all 102 cases, `--judge mock`) is deterministic — two consecutive runs produced identical
+The offline mock suite (all 127 cases, `--judge mock`) is deterministic — two consecutive runs produced identical
 statuses, verdicts and violations. Its statuses come from scripted transcripts (`evals/mock/responses.yaml`); most cases
 get a "does nothing" transcript, which correctly fails expectations that require an action. Mock results measure the
 harness, not skills.
@@ -136,7 +136,8 @@ Check types: `response_matches`, `response_not_matches` (`pattern`); `tool_calle
 optional `input_matches`); `command_ran`, `command_not_ran` (`pattern`); `file_changed`, `file_unchanged` (`path`
 regex); `no_file_changes`; `file_matches` (`path`, `pattern`); `tool_order` (`before`, `after` — each `{tool,
 input_matches}`); `skill_loaded` (`skill`); `skill_created` (`require_manifest`, `min_eval_kinds`);
-`brain_proposal_created`; `brain_fact_matches` (`pattern`). Only link a check when it faithfully decides the
+`brain_proposal_created`; `brain_fact_matches` (`pattern`); `experiment_recorded` (`min_runs`, `min_experiments` —
+runs logged through `brain exp`). Only link a check when it faithfully decides the
 expectation; otherwise mark it `partial` or leave the expectation to human/judge grading. Run
 `node scripts/eval.js list` to validate (schema: [schemas/eval-cases.schema.json](../schemas/eval-cases.schema.json)).
 

@@ -2,6 +2,24 @@
 
 All notable changes are documented here. Format: Keep a Changelog; versions follow SemVer.
 
+## [Unreleased] — phase 3 (research and ML)
+
+### Added
+- `brain init` research awareness: notebooks (code cells only; outputs never read) with execution-order, seed and
+  absolute-path risks; ML/science libraries with versions and CUDA pins; data/model folders and file kinds by name
+  and size; DVC/Git LFS; Snakemake/Nextflow; reference genome builds, flagging mixed builds as disputed.
+- Experiment memory: `brain exp start|log|finish|compare|list|show`, records in `.agent-brain/experiments/`;
+  metrics only from result files (JSON/JSONL/CSV/TSV); Welch's t-test comparisons with explicit verdicts;
+  audit re-verifies logged metrics and flags unsupported improvement claims; experiments in context and search.
+- Skills (draft): `ml-experiment`, `data-analysis` (with `leakage_check.py`), `literature-review`,
+  `bioinformatics-pipeline` (with `check_formats.py`); capabilities `paper.search`/`paper.fetch` (verified arXiv and
+  Semantic Scholar links); privileged actions `run-expensive-compute`, `upload-sensitive-data`, `download-large-data`.
+- 25 eval cases (structured checks incl. new `experiment_recorded`), workspaces `ml-project`, `data-leak`,
+  `bio-pipeline`; `docs/research-guide.md`.
+
+### Fixed
+- Router ignored trigger phrases at the end of a sentence (trailing full stop).
+
 ## [Unreleased] — phase 2 (hardening + behavioural evaluation)
 
 ### Security

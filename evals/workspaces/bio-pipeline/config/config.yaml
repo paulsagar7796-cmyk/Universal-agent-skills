@@ -1,0 +1,3 @@
+reference: ref/GRCh38_chr20.fa
+known_sites: known/dbsnp_hg19_chr20.vcf
+sample: S1

@@ -169,6 +169,88 @@
       }
     },
     {
+      "id": "data-analysis",
+      "description": "Analyses tabular or experimental data rigorously - profiles the data first, checks for leakage between train and test splits, chooses statistical tests whose assumptions hold, reports effect sizes and confidence intervals rather than bare p-values, corrects for multiple comparisons, and keeps notebooks reproducible. Use for exploratory analysis, statistics, A/B or experiment analysis, dataset checks, data leakage, p-values, or cleaning and validating datasets.",
+      "category": "data",
+      "path": "skills/data/data-analysis/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "data"
+        ],
+        "triggers": [
+          "data leakage",
+          "leakage",
+          "statistically significant",
+          "statistical",
+          "statistics",
+          "p-value",
+          "confidence interval",
+          "analyse the data",
+          "analyze the data",
+          "dataset",
+          "exploratory analysis",
+          "a/b test",
+          "conversion rate",
+          "notebook",
+          "significant"
+        ],
+        "avoid": [
+          "skill",
+          "paper",
+          "papers"
+        ],
+        "pairs_with": [
+          "verification-before-completion"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.exec"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [
+        {
+          "action": "upload-sensitive-data",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/data/data-analysis/SKILL.md",
+        "manifest": "skills/data/data-analysis/manifest.yaml",
+        "evals": "skills/data/data-analysis/evals/cases.yaml"
+      }
+    },
+    {
       "id": "code-review",
       "description": "Reviews a code change (local diff, branch or pull request) for correctness, security, data safety, tests and maintainability, and reports prioritised findings with evidence and concrete fixes. Use when asked to review code, a PR, a diff or changes before merging. Posting comments to a hosting service requires explicit approval.",
       "category": "engineering",
@@ -1088,6 +1170,202 @@
       }
     },
     {
+      "id": "ml-experiment",
+      "description": "Designs, runs, records and honestly compares machine-learning experiments - question and hypothesis first, a baseline, one change at a time (ablation), several seeds, untouched test set, every run recorded with config, data hashes and metrics from result files, and no claimed improvement unless a comparison over seeds supports it. Use when training or evaluating models, tuning, ablations, comparing variants, or writing up ML results.",
+      "category": "ml",
+      "path": "skills/ml/ml-experiment/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "medium",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "ml"
+        ],
+        "triggers": [
+          "train",
+          "training",
+          "ablation",
+          "baseline",
+          "seeds",
+          "hyperparameter",
+          "hyperparameters",
+          "fine-tune",
+          "fine tune",
+          "model accuracy",
+          "validation accuracy",
+          "loss is nan",
+          "loss goes to nan",
+          "experiment",
+          "experiments",
+          "label smoothing",
+          "learning rate",
+          "overfitting",
+          "make the model better"
+        ],
+        "avoid": [
+          "skill"
+        ],
+        "pairs_with": [
+          "data-analysis",
+          "verification-before-completion"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.exec",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [
+        {
+          "action": "run-expensive-compute",
+          "always_confirm": true
+        },
+        {
+          "action": "download-large-data",
+          "always_confirm": true
+        },
+        {
+          "action": "upload-sensitive-data",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 7,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 7 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/ml/ml-experiment/SKILL.md",
+        "manifest": "skills/ml/ml-experiment/manifest.yaml",
+        "evals": "skills/ml/ml-experiment/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "literature-review",
+      "description": "Runs a literature review on a research topic - turns it into search questions, searches arXiv and Semantic Scholar, reads abstracts and open-access papers, saves one structured note per paper to the project brain, builds a comparison of methods, datasets and results, and identifies gaps and conflicts, with every citation backed by a real arXiv ID or DOI that was actually retrieved. Use for related work, state of the art, surveys, finding papers, or \"what has been done on X\".",
+      "category": "research",
+      "path": "skills/research/literature-review/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "research"
+        ],
+        "triggers": [
+          "literature review",
+          "related work",
+          "state of the art",
+          "papers on",
+          "find papers",
+          "find the main papers",
+          "survey of",
+          "arxiv",
+          "semantic scholar",
+          "citations",
+          "citation",
+          "find me some papers",
+          "related-work"
+        ],
+        "avoid": [
+          "fact check",
+          "fact-check"
+        ],
+        "pairs_with": [
+          "source-verification"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write"
+      ],
+      "capabilities": {
+        "required": [
+          {
+            "id": "paper.search",
+            "access": "read",
+            "purpose": "find papers and their metadata on arXiv and Semantic Scholar",
+            "fallback": "work from PDFs or BibTeX the user provides, labelled not a complete search"
+          }
+        ],
+        "optional": [
+          {
+            "id": "paper.fetch",
+            "access": "read",
+            "purpose": "read open-access full texts of included papers",
+            "fallback": "use abstracts only and mark notes as abstract-only"
+          },
+          {
+            "id": "web.fetch",
+            "access": "read",
+            "purpose": "reach the arXiv and Semantic Scholar APIs from the host",
+            "fallback": "ask the user for exported search results"
+          }
+        ]
+      },
+      "approvals": [
+        {
+          "action": "download-large-data",
+          "always_confirm": true
+        },
+        {
+          "action": "publish",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 4,
+        "status": "4 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/research/literature-review/SKILL.md",
+        "manifest": "skills/research/literature-review/manifest.yaml",
+        "evals": "skills/research/literature-review/evals/cases.yaml"
+      }
+    },
+    {
       "id": "source-verification",
       "description": "Checks whether a specific claim, statistic, quote or citation is supported by its source - traces it to the primary source, compares exact wording, dates and scope, and returns a verdict (supported, partially supported, unsupported, contradicted, unverifiable) with evidence. Use for fact-checking, verifying citations or links, checking whether a source is credible, or before publishing claims.",
       "category": "research",
@@ -1268,6 +1546,95 @@
         "skill": "skills/research/web-research/SKILL.md",
         "manifest": "skills/research/web-research/manifest.yaml",
         "evals": "skills/research/web-research/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "bioinformatics-pipeline",
+      "description": "Builds, runs and checks bioinformatics workflows - validates FASTA, FASTQ, SAM/BAM, VCF and GFF/GTF inputs, keeps one reference genome build and records tool and database versions, runs quality control before analysis, uses workflow managers (Snakemake, Nextflow) reproducibly, and treats genomic and patient data as sensitive. Use for sequencing data, alignment, variant calling, RNA-seq, genome annotation, Biopython or pipeline debugging.",
+      "category": "science",
+      "path": "skills/science/bioinformatics-pipeline/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "medium",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "science"
+        ],
+        "triggers": [
+          "fastq",
+          "fasta",
+          "vcf",
+          "bam",
+          "variant calling",
+          "variant-calling",
+          "sequencing",
+          "reads",
+          "genome",
+          "reference genome",
+          "snakemake",
+          "nextflow",
+          "rna-seq",
+          "alignment",
+          "biopython",
+          "bioinformatics",
+          "variant",
+          "chromosomes"
+        ],
+        "avoid": [],
+        "pairs_with": [
+          "verification-before-completion"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.exec"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [
+        {
+          "action": "upload-sensitive-data",
+          "always_confirm": true
+        },
+        {
+          "action": "download-large-data",
+          "always_confirm": true
+        },
+        {
+          "action": "run-expensive-compute",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 4,
+        "status": "4 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/science/bioinformatics-pipeline/SKILL.md",
+        "manifest": "skills/science/bioinformatics-pipeline/manifest.yaml",
+        "evals": "skills/science/bioinformatics-pipeline/evals/cases.yaml"
       }
     },
     {

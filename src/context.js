@@ -5,6 +5,7 @@ import path from 'node:path';
 import { freshness } from './facts.js';
 import { markdownSections } from './store.js';
 import { listProposals } from './proposals.js';
+import { listExperiments } from './experiments.js';
 import { deniedCapabilities, loadState } from './broker.js';
 import { readJsonIfExists, today, truncate } from './util.js';
 
@@ -98,6 +99,25 @@ export function buildContext({ store, project, config, cli, now = new Date(), in
   if (factLines.length) {
     const more = withFresh.length > factLines.length ? `\n- …${withFresh.length - factLines.length} more (\`brain search <topic>\`)` : '';
     add('facts', `## Key facts (${withFresh.length} active; ${stale.length} need re-checking)\n${factLines.join('\n')}${more}`, 'facts.yaml');
+  }
+
+  let exps = [];
+  try {
+    exps = listExperiments(store).filter((e) => !e.error);
+  } catch {
+    exps = [];
+  }
+  if (exps.length) {
+    const lines = exps.slice(-5).map((e) => {
+      const keys = Object.keys(e.runs?.[0]?.metrics ?? {}).filter((k) => !/^(epoch|step|steps|iter|iteration|global_step|batch)$/i.test(k)).slice(0, 2);
+      const m = keys.map((k) => {
+        const v = e.runs.map((r) => r.metrics[k]).filter((x) => typeof x === 'number');
+        return `${k} ${Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 10000) / 10000}${v.length > 1 ? ` (n=${v.length})` : ''}`;
+      });
+      const cmp = (e.comparisons ?? []).map((c) => `vs ${c.against}: ${c.verdict}`).join('; ');
+      return `- ${e.id} [${e.status}] ${truncate(e.title, 80)}${m.length ? ` — ${m.join(', ')}` : ''}${cmp ? ` — ${cmp}` : ''}`;
+    });
+    add('experiments', `## Experiments (${exps.length}; latest ${lines.length})\n${lines.join('\n')}\n- Record runs with \`brain exp start/log/finish\`; only claim an improvement that \`brain exp compare\` reports.`, 'experiments/');
   }
 
   const decisions = store.listDecisions().filter((d) => d.status !== 'rejected' && d.status !== 'superseded');

@@ -19,5 +19,9 @@ workspace_defaults:
   web-research: notes
   source-verification: notes
   skill-package-audit: skill-audit
+  ml-experiment: ml-project
+  data-analysis: data-leak
+  literature-review: notes
+  bioinformatics-pipeline: bio-pipeline
 # Skills whose workspace gets an initialised .agent-brain/ before the run.
-brain_skills: [brain-curator]
+brain_skills: [brain-curator, ml-experiment, literature-review]

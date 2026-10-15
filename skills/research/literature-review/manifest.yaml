@@ -1,0 +1,37 @@
+schema_version: 1
+id: literature-review
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [research]
+  triggers: [literature review, related work, state of the art, papers on, find papers, find the main papers, survey of, arxiv, semantic scholar, citations, citation, find me some papers, related-work]
+  avoid: [fact check, fact-check]
+  pairs_with: [source-verification]
+local_permissions: [filesystem.read, filesystem.write]
+capabilities:
+  required: 
+    - id: paper.search
+      access: read
+      purpose: find papers and their metadata on arXiv and Semantic Scholar
+      fallback: work from PDFs or BibTeX the user provides, labelled not a complete search
+  optional: 
+    - id: paper.fetch
+      access: read
+      purpose: read open-access full texts of included papers
+      fallback: use abstracts only and mark notes as abstract-only
+    - id: web.fetch
+      access: read
+      purpose: reach the arXiv and Semantic Scholar APIs from the host
+      fallback: ask the user for exported search results
+approvals: 
+  - action: download-large-data
+    always_confirm: true
+  - action: publish
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

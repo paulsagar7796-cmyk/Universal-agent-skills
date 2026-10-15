@@ -1,0 +1,23 @@
+schema_version: 1
+id: data-analysis
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [data]
+  triggers: [data leakage, leakage, statistically significant, statistical, statistics, p-value, confidence interval, analyse the data, analyze the data, dataset, exploratory analysis, a/b test, conversion rate, notebook, significant]
+  avoid: [skill, paper, papers]
+  pairs_with: [verification-before-completion]
+local_permissions: [filesystem.read, filesystem.write, shell.exec]
+capabilities:
+  required: []
+  optional: []
+approvals: 
+  - action: upload-sensitive-data
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

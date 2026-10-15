@@ -14,10 +14,14 @@ const INTENTS = {
   plan: ['plan', 'roadmap', 'break down', 'breakdown', 'estimate', 'steps', 'milestones'],
   brain: ['memory', 'brain', 'handoff', 'remember', 'context', 'onboard', 'onboarding'],
   skills: ['skill', 'skills', 'skill.md'],
+  ml: ['train', 'training', 'model', 'ablation', 'baseline', 'seed', 'seeds', 'hyperparameter', 'fine-tune', 'epoch', 'loss'],
+  data: ['dataset', 'data', 'statistics', 'statistical', 'significant', 'p-value', 'csv', 'notebook', 'leakage', 'analyse', 'analyze'],
+  science: ['genome', 'sequencing', 'fastq', 'fasta', 'vcf', 'bioinformatics', 'variant', 'protein', 'dna', 'rna', 'snakemake', 'reads'],
 };
 
 function norm(s) {
-  return ` ${String(s).toLowerCase().replace(/[^\p{L}\p{N}.+#-]+/gu, ' ').replace(/\s+/g, ' ').trim()} `;
+  // Keep dots inside tokens (skill.md, v1.2) but drop sentence-ending ones ("…the data.").
+  return ` ${String(s).toLowerCase().replace(/[^\p{L}\p{N}.+#-]+/gu, ' ').replace(/\.+(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim()} `;
 }
 
 function hasPhrase(normText, phrase) {

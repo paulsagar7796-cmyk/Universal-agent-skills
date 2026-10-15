@@ -70,6 +70,16 @@ export function extractDocs(store) {
       }
       continue;
     }
+    if (/^experiments\/EXP-\d+\.yaml$/.test(rel)) {
+      try {
+        const e = parse(text);
+        const metrics = [...new Set((e.runs ?? []).flatMap((r) => Object.keys(r.metrics ?? {})))].join(' ');
+        docs.push({ path: rel, kind: 'experiment', ref: e.id, title: `${e.id} [${e.status}] ${e.title}`, body: [e.title, e.question, e.hypothesis, e.conclusion, e.split, metrics, (e.config ?? []).map((c) => c.path).join(' '), (e.data ?? []).map((d) => d.path).join(' '), (e.comparisons ?? []).map((c) => `${c.against} ${c.metric} ${c.verdict}`).join(' ')].filter(Boolean).join('\n') });
+      } catch {
+        docs.push({ path: rel, kind: 'file', ref: rel, title: rel, body: text });
+      }
+      continue;
+    }
     if (rel.endsWith('.md')) {
       const kind = rel.startsWith('decisions/ADR-') ? 'decision' : rel.startsWith('handoffs/') ? 'handoff' : rel.startsWith('plans/') ? 'plan' : 'markdown';
       for (const [heading, body] of Object.entries(markdownSections(text))) {

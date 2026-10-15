@@ -26,6 +26,7 @@ export const CHECK_TYPES = {
   tool_order: ['before', 'after'],
   file_matches: ['path', 'pattern'],
   skill_created: [],
+  experiment_recorded: [],
 };
 
 export function loadEvalConfig() {

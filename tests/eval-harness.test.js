@@ -19,12 +19,12 @@ const one = (id) => loadCases({ ids: [id] }).cases[0];
 const t = (final_text, events = [], extra = {}) => ({ final_text, events, skills_loaded: [], ...extra });
 const noDiff = { created: [], modified: [], deleted: [], all: [] };
 
-test('all 102 cases load against the existing schema with no problems; coverage is reported honestly', () => {
+test('all 127 cases load against the existing schema with no problems; coverage is reported honestly', () => {
   const { cases, problems } = loadCases();
   assert.deepEqual(problems, []);
-  assert.equal(cases.length, 102);
+  assert.equal(cases.length, 127);
   const cov = coverage(cases);
-  assert.equal(cov.criteria, 181);
+  assert.equal(cov.criteria, 226);
   assert.ok(cov.structured > 0 && cov.unstructured > 0);
   assert.ok(cases.every((c) => c.criteria.length > 0), 'every case has at least one expectation');
 });

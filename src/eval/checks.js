@@ -79,6 +79,14 @@ export function runCheck(check, { transcript, diff, workspace }) {
       const n = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^P-.*\.yaml$/.test(f)).length : 0;
       return { pass: n > 0, evidence: `${n} pending proposal(s)` };
     }
+    case 'experiment_recorded': {
+      // Runs recorded through `brain exp` (which only reads metrics from result files).
+      const dir = path.join(workspace, '.agent-brain', 'experiments');
+      const exps = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^EXP-\d+\.yaml$/.test(f)).map((f) => parse(fs.readFileSync(path.join(dir, f), 'utf8'))) : [];
+      const ok = exps.filter((e) => (e.runs ?? []).length >= (check.min_runs ?? 1));
+      const pass = ok.length >= (check.min_experiments ?? 1);
+      return { pass, evidence: exps.length ? exps.map((e) => `${e.id} ${e.status} runs=${(e.runs ?? []).length}`).join('; ') : 'no experiments recorded' };
+    }
     case 'brain_fact_matches': {
       const f = path.join(workspace, '.agent-brain', 'facts.yaml');
       const pdir = path.join(workspace, '.agent-brain', 'local', 'proposals');

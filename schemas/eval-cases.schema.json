@@ -125,7 +125,8 @@
                     "brain_fact_matches",
                     "tool_order",
                     "file_matches",
-                    "skill_created"
+                    "skill_created",
+                    "experiment_recorded"
                   ]
                 },
                 "partial": {
@@ -160,6 +161,12 @@
                   "type": "boolean"
                 },
                 "min_eval_kinds": {
+                  "type": "integer"
+                },
+                "min_runs": {
+                  "type": "integer"
+                },
+                "min_experiments": {
                   "type": "integer"
                 }
               }

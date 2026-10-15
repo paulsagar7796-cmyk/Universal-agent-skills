@@ -1,0 +1,27 @@
+schema_version: 1
+id: ml-experiment
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [ml]
+  triggers: [train, training, ablation, baseline, seeds, hyperparameter, hyperparameters, fine-tune, fine tune, model accuracy, validation accuracy, loss is nan, loss goes to nan, experiment, experiments, label smoothing, learning rate, overfitting, make the model better]
+  avoid: [skill]
+  pairs_with: [data-analysis, verification-before-completion]
+local_permissions: [filesystem.read, filesystem.write, shell.exec, git.read]
+capabilities:
+  required: []
+  optional: []
+approvals: 
+  - action: run-expensive-compute
+    always_confirm: true
+  - action: download-large-data
+    always_confirm: true
+  - action: upload-sensitive-data
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

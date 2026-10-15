@@ -13,6 +13,7 @@ import { appendEvent, makeEvent, readEvents, hashSession } from './events.js';
 import { initBrain } from './init.js';
 import { applyProposal, confirmFact, deprecateFact, getProposal, listProposals, proposeDecision, proposeFact, rejectProposal } from './proposals.js';
 import { writeHandoff } from './handoff.js';
+import { compareExperiments, finishExperiment, getExperiment, listExperiments, logMetrics, recordComparison, startExperiment } from './experiments.js';
 import { audit } from './audit.js';
 import { loadRuntimeCatalog, loadCapabilityRegistry, CATALOG_FILE, REPO_ROOT, findSkillDirs } from './catalog.js';
 import { route } from './router.js';
@@ -23,8 +24,8 @@ import { spawnSync } from 'node:child_process';
 import { cliInvocation, runHookProcess } from './hooks.js';
 import { exists, readJsonIfExists, truncate } from './util.js';
 
-const REPEATABLE = new Set(['evidence', 'done', 'next', 'blocker', 'check', 'assumption', 'alternative', 'agent', 'access']);
-const BOOLEAN = new Set(['json', 'full', 'verbose', 'dry-run', 'yes', 'global', 'no-enforce', 'no-diff', 'confirm', 'supersede', 'dispute', 'always-confirm', 'help', 'all', 'harden']);
+const REPEATABLE = new Set(['evidence', 'done', 'next', 'blocker', 'check', 'assumption', 'alternative', 'agent', 'access', 'config', 'data', 'seed']);
+const BOOLEAN = new Set(['json', 'full', 'verbose', 'dry-run', 'yes', 'global', 'no-enforce', 'no-diff', 'confirm', 'supersede', 'dispute', 'always-confirm', 'help', 'all', 'harden', 'no-env-probe', 'lower-better', 'no-record']);
 
 export function parseArgs(argv) {
   const pos = [];
@@ -83,7 +84,16 @@ Memory:
   brain verify [FACT-…] [--confirm --evidence …]     report freshness / record re-verification
   brain deprecate <FACT-…> --reason r
   brain handoff --task t [--done x]… [--next x]… [--blocker x]… [--check "cmd=passed|failed|not-run|blocked[: note]"]… [--assumption x]…
-  brain audit                      stale, disputed, unevidenced, secrets
+  brain audit                      stale, disputed, unevidenced, secrets, experiment honesty checks
+
+Experiments (metrics are read from result files only; there is no way to type a value):
+  brain exp start --title t [--question q] [--hypothesis h] [--baseline EXP-…] [--config file]… [--data role=file]…
+                  [--split desc] [--seed N]… [--python path] [--no-env-probe]
+  brain exp log <EXP-…> --from results.json|.jsonl|.csv [--select a,b] [--row N] [--seed N]
+  brain exp finish <EXP-…> --status completed|failed|abandoned [--conclusion "…"]
+  brain exp compare <baseline> <candidate> --metric m [--baseline-metric m0] [--lower-better] [--alpha 0.05]
+                  [--min-seeds 3] [--no-record]
+  brain exp list | show <EXP-…>
   brain index rebuild|status
   brain explain-last-run           what the controller did since the last session start
 
@@ -824,11 +834,82 @@ function cmdRuntime(flags) {
   return 0;
 }
 
+function fmtExp(e) {
+  const m = (e.runs ?? []).length ? Object.keys(e.runs[0].metrics ?? {}).filter((k) => !/^(epoch|step|steps|iter|iteration|global_step|batch)$/i.test(k)).slice(0, 3) : [];
+  const stats = m.map((k) => {
+    const v = e.runs.map((r) => r.metrics[k]).filter((x) => typeof x === 'number');
+    const mean = v.reduce((a, b) => a + b, 0) / v.length;
+    return `${k}=${Math.round(mean * 10000) / 10000}${v.length > 1 ? ` (n=${v.length})` : ''}`;
+  });
+  return `${e.id} [${e.status}] ${e.title}${e.baseline ? ` (baseline ${e.baseline})` : ''}${stats.length ? ` — ${stats.join(', ')}` : ''}${(e.comparisons ?? []).length ? ` — vs ${e.comparisons.map((c) => `${c.against}: ${c.verdict}`).join('; ')}` : ''}`;
+}
+
+function cmdExp(flags, pos) {
+  const { project, store } = ctx(flags);
+  requireBrain(store);
+  const [sub, a, b] = pos;
+  switch (sub) {
+    case 'start': {
+      const e = startExperiment(store, project, { title: flags.title, question: flags.question, hypothesis: flags.hypothesis, baseline: flags.baseline, configs: flags.config ?? [], data: flags.data ?? [], split: flags.split, seeds: flags.seed ?? [], python: flags.python, probeEnv: !flags['no-env-probe'] });
+      logEvent(store, 'experiment', { action: 'start', id: e.id });
+      out(`Started ${e.id}: ${e.title}`);
+      out(`  code: ${e.code ? `${e.code.branch} @ ${e.code.commit ?? 'no commits'}${e.code.uncommitted_changes ? ` (+${e.code.uncommitted_changes} uncommitted change(s) — commit first for exact reproducibility)` : ''}` : 'not a git repository'}`);
+      out(`  config: ${e.config.map((c) => `${c.path} (${c.sha256})`).join(', ') || 'none recorded'}; data: ${e.data.map((d) => `${d.role}=${d.path} (${d.sha256}${d.hash_mode !== 'full' ? `, ${d.hash_mode}` : ''})`).join(', ') || 'none recorded'}`);
+      out(`  seeds: ${e.seeds.join(', ') || 'none recorded'}; environment: ${e.environment.python ? `python ${e.environment.python}` : 'python not probed'}${e.environment.libraries ? `, ${Object.entries(e.environment.libraries).map(([k, v]) => `${k} ${v}`).join(', ')}` : ''}${e.environment.gpus ? `, GPU ${e.environment.gpus.join('; ')}` : ''}`);
+      out(`Next: run it, then \`brain exp log ${e.id} --from <results.json|csv> [--seed N]\`, then \`brain exp finish ${e.id} --status completed\`.`);
+      return 0;
+    }
+    case 'log': {
+      const e = logMetrics(store, project, a, { from: flags.from, select: flags.select ? String(flags.select).split(',').map((x) => x.trim()) : null, row: flags.row ?? null, seed: flags.seed?.[0] ?? null });
+      const r = e.runs.at(-1);
+      logEvent(store, 'experiment', { action: 'log', id: e.id, metrics: Object.keys(r.metrics).length });
+      out(`Logged run ${e.runs.length} of ${e.id}${r.seed !== null ? ` (seed ${r.seed})` : ''} from ${r.source.path} [${r.source.locator}]: ${Object.entries(r.metrics).map(([k, v]) => `${k}=${v}`).join(', ')}`);
+      return 0;
+    }
+    case 'finish': {
+      const e = finishExperiment(store, a, { status: flags.status, conclusion: flags.conclusion ?? null });
+      logEvent(store, 'experiment', { action: 'finish', id: e.id, status: e.status });
+      out(`${e.id} → ${e.status}.${e.status === 'completed' && e.baseline ? ` Compare it honestly: brain exp compare ${e.baseline} ${e.id} --metric <name>` : ''}`);
+      return 0;
+    }
+    case 'compare': {
+      if (!a || !b || !flags.metric) throw new UsageError('usage: brain exp compare <baseline EXP> <candidate EXP> --metric <name> [--lower-better] [--alpha 0.05] [--min-seeds 3] [--no-record]');
+      const opts = { higherIsBetter: !flags['lower-better'], alpha: flags.alpha ? Number(flags.alpha) : 0.05, minSeeds: flags['min-seeds'] ? Number(flags['min-seeds']) : 3, baselineMetric: flags['baseline-metric'] ?? null };
+      const r = flags['no-record'] ? compareExperiments(getExperiment(store, a), getExperiment(store, b), flags.metric, opts) : recordComparison(store, a, b, flags.metric, opts);
+      logEvent(store, 'experiment', { action: 'compare', baseline: a, candidate: b, metric: flags.metric, verdict: r.verdict });
+      if (flags.json) {
+        out(JSON.stringify(r, null, 2));
+        return 0;
+      }
+      out(`${b} vs ${a} on ${flags.metric} (${opts.higherIsBetter ? 'higher' : 'lower'} is better): ${r.verdict.toUpperCase()}`);
+      if (r.summary) for (const [id, s] of Object.entries(r.summary)) out(`  ${id}: mean ${s.mean} ± ${s.sd} (sd), n=${s.n}`);
+      if (r.difference !== undefined) out(`  difference ${r.difference}${r.relative_change_pct !== null ? ` (${r.relative_change_pct}%)` : ''}${r.test ? `; ${r.test.name}: t=${r.test.t}, df=${r.test.df}, p=${r.test.p}` : ''}`);
+      for (const x of [...(r.reasons ?? []), ...(r.warnings ?? []), ...(r.caveats ?? [])]) out(`  - ${x}`);
+      return 0;
+    }
+    case 'show': {
+      const e = getExperiment(store, a);
+      out(flags.json ? JSON.stringify(e, null, 2) : stringify(e).trimEnd());
+      return 0;
+    }
+    case undefined:
+    case 'list': {
+      const all = listExperiments(store);
+      if (flags.json) out(JSON.stringify(all, null, 2));
+      else if (!all.length) out('No experiments recorded. Start one with: brain exp start --title "..." --config <file> --data train=<file> --seed 1');
+      else for (const e of all) out(e.error ? `${e.id}: unreadable (${e.error})` : fmtExp(e));
+      return 0;
+    }
+    default:
+      throw new UsageError('usage: brain exp start|log|finish|compare|list|show (see brain help)');
+  }
+}
+
 const COMMANDS = {
   setup: cmdSetup, repair: cmdRepair, uninstall: cmdUninstall, init: cmdInit, status: cmdStatus, context: cmdContext, search: cmdSearch, show: cmdShow,
   remember: cmdRemember, proposals: cmdProposals, approve: cmdApprove, reject: cmdReject, decide: cmdDecide, verify: cmdVerify, deprecate: cmdDeprecate,
   handoff: cmdHandoff, audit: cmdAudit, index: cmdIndex, route: cmdRoute, capabilities: cmdCapabilities, consent: cmdConsent, authorize: cmdAuthorize,
-  connect: cmdConnect, 'explain-last-run': cmdExplain, doctor: cmdDoctor, runtime: cmdRuntime,
+  connect: cmdConnect, 'explain-last-run': cmdExplain, doctor: cmdDoctor, runtime: cmdRuntime, exp: cmdExp,
 };
 
 export async function main(argv) {

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { freshness } from './facts.js';
 import { findSecrets } from './secrets.js';
 import { listProposals } from './proposals.js';
+import { auditExperiments } from './experiments.js';
 import { readTextIfExists, today } from './util.js';
 
 /** Health report for a project brain: errors must be fixed; warnings need attention; info is advisory. */
@@ -46,6 +47,8 @@ export function audit(store, project, { now = new Date() } = {}) {
 
   const gi = readTextIfExists(store.p('.gitignore')) ?? '';
   if (!/^local\/?$/m.test(gi)) warnings.push('.agent-brain/.gitignore does not ignore local/ — runtime state (index, trace, consent) could be committed');
+
+  warnings.push(...auditExperiments(store, now, project.root));
 
   const pending = listProposals(store);
   if (pending.length) info.push(`${pending.length} pending memory proposal(s) — review with \`brain proposals\``);

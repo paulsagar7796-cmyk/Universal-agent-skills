@@ -1,0 +1,3 @@
+lr: 0.001
+label_smoothing: 0.0
+epochs: 10

@@ -23,6 +23,14 @@ Status as of 2026-10-15.
   evidence-validated judge, human grading, reports, re-runs and an advisory release gate (proposed policy).
 - Setup integrity: controller checksums (trust on first use), journaled apply, PATH fallback, richer doctor/repair.
 
+## Implemented (phase 3, unreleased)
+
+- Research-project awareness in `brain init`: notebooks (code cells only), ML/science libraries and versions, CUDA
+  pins, data/model folders by name and size, DVC/LFS, Snakemake/Nextflow, reference genome builds and conflicts.
+- Experiment memory (`brain exp`) with file-sourced metrics, Welch comparisons over seeds, audit re-verification.
+- Skills: ml-experiment, data-analysis (+ leakage_check.py), literature-review (arXiv / Semantic Scholar capabilities),
+  bioinformatics-pipeline (+ check_formats.py). 25 new eval cases, 3 new fixture workspaces.
+
 ## Partially implemented
 
 - **Automatic memory updates:** hooks checkpoint mechanical state (git) automatically; durable facts and decisions are
@@ -36,17 +44,19 @@ Status as of 2026-10-15.
 
 ## Next (priority order)
 
-1. **First live behavioural run** on Claude Code (owner-approved budget), then human/judge grading of the 133
+1. **Space-data and quantum skills** (NASA/astronomy data access, Qiskit/Cirq workflows), W&B/MLflow import into
+   experiment memory.
+2. **First live behavioural run** on Claude Code (owner-approved budget), then human/judge grading of the 133
    prose expectations; fix skills and checks from the failures; decide on the proposed release policy.
-2. **Fixture fidelity** — add workspaces for the ~20 cases whose fixture is described only in prose (see
+3. **Fixture fidelity** — add workspaces for the ~20 cases whose fixture is described only in prose (see
    docs/evaluation-guide.md), and more structured checks where they are faithful.
-3. **Stronger approval boundary** — a separately privileged approval component or OS-keychain-backed signing key the
+4. **Stronger approval boundary** — a separately privileged approval component or OS-keychain-backed signing key the
    agent cannot read (threat-model U1/U4); Linux bubblewrap verification of `--harden`.
-4. **Codex adapter** — `hooks.json` with hash-trust notes, plus a Codex eval provider; verify on a real Codex version.
-5. **Initialisation benchmark** — six public fixture repositories with human-labelled expected facts.
-6. Read-only MCP server (`brain_context`, `brain_search`, `brain_get_fact`, `capability_status`) for MCP-capable hosts.
-7. Antigravity / Gemini CLI adapters (different payload shapes).
-8. `brain plan` command and plan ↔ status integration.
+5. **Codex adapter** — `hooks.json` with hash-trust notes, plus a Codex eval provider; verify on a real Codex version.
+6. **Initialisation benchmark** — six public fixture repositories with human-labelled expected facts.
+7. Read-only MCP server (`brain_context`, `brain_search`, `brain_get_fact`, `capability_status`) for MCP-capable hosts.
+8. Antigravity / Gemini CLI adapters (different payload shapes).
+9. `brain plan` command and plan ↔ status integration.
 
 ## Later
 

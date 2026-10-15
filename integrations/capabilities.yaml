@@ -65,6 +65,34 @@ capabilities:
     claude_code_tools:
       write: ['^mcp__github__(create|update|delete|merge|push|add|fork|dismiss|request|assign)_', '^mcp__github__\w+_write$', '^mcp__github__actions_run_trigger$']
 
+  paper.search:
+    description: Search scholarly literature indexes (arXiv, Semantic Scholar) for papers and metadata
+    access_levels: [read]
+    providers:
+      - id: arxiv-api
+        host: any
+        kind: public HTTP API (Atom XML, no key)
+        setup: Query export.arxiv.org/api/query. Wait about 3 seconds between calls and cache results, per the arXiv API user manual and terms of use.
+        official_setup_url: https://info.arxiv.org/help/api/user-manual.html
+        verified_on: 2026-10-15
+      - id: semantic-scholar-api
+        host: any
+        kind: public HTTP API (JSON; API key optional)
+        setup: Academic Graph API at api.semanticscholar.org; unauthenticated requests share a global rate limit, so an API key is recommended for regular use. Review the API license agreement.
+        official_setup_url: https://www.semanticscholar.org/product/api
+        verified_on: 2026-10-15
+    # Reached through web.fetch / shell tools; enforcement of a denial uses the web.fetch mapping.
+  paper.fetch:
+    description: Download open-access full texts (PDF/HTML) of specific papers
+    access_levels: [read]
+    providers:
+      - id: arxiv-pdf
+        host: any
+        kind: public HTTP (arxiv.org/pdf/<id>)
+        setup: Fetch only papers you need; respect arXiv terms of use and each paper's license.
+        official_setup_url: https://info.arxiv.org/help/api/user-manual.html
+        verified_on: 2026-10-15
+
 # Matcher for the optional Claude Code PreToolUse enforcement hook: only these tools invoke the controller.
 claude_code_pretooluse_matcher: WebSearch|WebFetch|mcp__github__.*
 
@@ -80,3 +108,6 @@ privileged_actions:
   - deploy
   - change-production
   - spend-money
+  - run-expensive-compute
+  - upload-sensitive-data
+  - download-large-data
