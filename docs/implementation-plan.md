@@ -71,4 +71,4 @@ community submission pipeline, LLM-graded behaviour evals (cases + rubric exist;
 | 7. Broker cases | Met — missing/denied/approved/scope/expired/revoked/once/session/action tests |
 | 8. Secrets rejected | Met — proposals, consent notes, evidence, events, audit |
 | 9. Real host run | Met — Claude Code 2.1.300 (`-p`): context, routing, checkpoints, denial enforcement |
-| 10. CI workflow | Written; not yet run on GitHub (no remote) |
+| 10. CI workflow | Met — first GitHub run passed all 4 jobs (Node 24 Linux/macOS, Node 22.13.0 Linux, official skills-ref validator), run 38747367707 |
