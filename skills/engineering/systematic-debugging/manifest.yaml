@@ -1,0 +1,21 @@
+schema_version: 1
+id: systematic-debugging
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [debug]
+  triggers: [bug, error, fails, failing, crash, crashes, broken, exception, stack trace, regression, not working, doesn't work, debug, root cause, flaky, throws, segfault, 500 error]
+  avoid: []
+  pairs_with: [verification-before-completion]
+local_permissions: [filesystem.read, filesystem.write, shell.exec, git.read]
+capabilities:
+  required: []
+  optional: []
+approvals: []
+verified_agents: []
+security:
+  scan_exceptions: []

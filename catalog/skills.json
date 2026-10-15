@@ -1,0 +1,1350 @@
+{
+  "schema_version": 1,
+  "generated_by": "scripts/build-catalog.js",
+  "package": "universal-agent-skills",
+  "version": "0.1.0",
+  "skills": [
+    {
+      "id": "business-analyst",
+      "description": "Clarifies a business problem before solutions are built - identifies stakeholders, current and target processes, business rules, constraints, and testable requirements with acceptance criteria, separating evidence from assumptions. Use for vague product or business requests, startup or feature ideas, process improvement, requirements gathering, or when \"what should we build\" is unclear.",
+      "category": "business",
+      "path": "skills/business/business-analyst/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "business"
+        ],
+        "triggers": [
+          "requirements",
+          "gather requirements",
+          "stakeholder",
+          "stakeholders",
+          "business process",
+          "business rules",
+          "user needs",
+          "as-is",
+          "to-be",
+          "business problem",
+          "use cases",
+          "startup idea",
+          "business idea",
+          "business case",
+          "what should we build",
+          "process improvement",
+          "evaluate a startup"
+        ],
+        "avoid": [
+          "prd",
+          "product requirements document"
+        ],
+        "pairs_with": [
+          "web-research"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": [
+          {
+            "id": "web.search",
+            "access": "read",
+            "purpose": "gather current market, competitor or regulatory context",
+            "fallback": "offline analysis clearly labelled as not current, with a list of data to collect"
+          }
+        ]
+      },
+      "approvals": [
+        {
+          "action": "send-external-message",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/business/business-analyst/SKILL.md",
+        "manifest": "skills/business/business-analyst/manifest.yaml",
+        "evals": "skills/business/business-analyst/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "prd-writer",
+      "description": "Writes a product requirements document (PRD) or feature spec with problem, users, goals and non-goals, measurable success metrics, prioritised requirements with acceptance criteria, risks and open questions - every claim marked as evidence or assumption. Use when asked for a PRD, product spec, feature spec, requirements document or product brief.",
+      "category": "business",
+      "path": "skills/business/prd-writer/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "business",
+          "docs"
+        ],
+        "triggers": [
+          "prd",
+          "product requirements",
+          "product requirements document",
+          "product spec",
+          "spec out",
+          "feature spec",
+          "requirements document",
+          "product brief",
+          "write a spec"
+        ],
+        "avoid": [],
+        "pairs_with": [
+          "business-analyst"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [
+        {
+          "action": "publish",
+          "always_confirm": true
+        },
+        {
+          "action": "send-external-message",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/business/prd-writer/SKILL.md",
+        "manifest": "skills/business/prd-writer/manifest.yaml",
+        "evals": "skills/business/prd-writer/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "code-review",
+      "description": "Reviews a code change (local diff, branch or pull request) for correctness, security, data safety, tests and maintainability, and reports prioritised findings with evidence and concrete fixes. Use when asked to review code, a PR, a diff or changes before merging. Posting comments to a hosting service requires explicit approval.",
+      "category": "engineering",
+      "path": "skills/engineering/code-review/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "medium",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "review"
+        ],
+        "triggers": [
+          "code review",
+          "review my changes",
+          "review this diff",
+          "review the diff",
+          "review this pr",
+          "review the pr",
+          "pull request",
+          "review my code",
+          "look over my code",
+          "review before merging",
+          "review"
+        ],
+        "avoid": [
+          "skill",
+          "sources",
+          "paper",
+          "requirements",
+          "prd",
+          "claim"
+        ],
+        "pairs_with": []
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "shell.read-only",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": [
+          {
+            "id": "github.read",
+            "access": "read",
+            "purpose": "read a hosted pull request, its diff and discussion",
+            "fallback": "review the local diff (git diff base...HEAD) or a diff the user pastes"
+          },
+          {
+            "id": "github.write",
+            "access": "privileged",
+            "purpose": "post review comments on the pull request when the user asks",
+            "fallback": "return the review in chat for the user to post"
+          }
+        ]
+      },
+      "approvals": [
+        {
+          "action": "post-review-comment",
+          "always_confirm": true
+        },
+        {
+          "action": "merge-pull-request",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/engineering/code-review/SKILL.md",
+        "manifest": "skills/engineering/code-review/manifest.yaml",
+        "evals": "skills/engineering/code-review/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "documentation-engineering",
+      "description": "Writes and updates developer documentation - README, setup guides, API references, architecture notes, changelogs - so that every command, option and example matches the actual code and has been checked. Use when asked to document something, update docs or a README after a change, write a changelog, or find docs that are out of date.",
+      "category": "engineering",
+      "path": "skills/engineering/documentation-engineering/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; doc-type split follows the widely used tutorial/how-to/reference/explanation convention; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "docs"
+        ],
+        "triggers": [
+          "readme",
+          "documentation",
+          "docs",
+          "document this",
+          "document the",
+          "changelog",
+          "api docs",
+          "api reference",
+          "setup guide",
+          "update the docs",
+          "docs are out of date",
+          "write a guide",
+          "how-to guide"
+        ],
+        "avoid": [
+          "requirements document",
+          "prd",
+          "product requirements"
+        ],
+        "pairs_with": []
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.exec"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": [
+          {
+            "id": "web.fetch",
+            "access": "read",
+            "purpose": "check that external links in the docs resolve",
+            "fallback": "list external links as unchecked"
+          }
+        ]
+      },
+      "approvals": [
+        {
+          "action": "publish",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/engineering/documentation-engineering/SKILL.md",
+        "manifest": "skills/engineering/documentation-engineering/manifest.yaml",
+        "evals": "skills/engineering/documentation-engineering/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "software-engineer",
+      "description": "Implements scoped software changes in an existing repository - features, enhancements, refactors and fixes - by learning the project's conventions first, making the smallest coherent change, verifying it with real commands, and updating project memory. Use when asked to build, implement, add, change, refactor or wire up code.",
+      "category": "engineering",
+      "path": "skills/engineering/software-engineer/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "medium",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "build"
+        ],
+        "triggers": [
+          "add a",
+          "implement",
+          "add a feature",
+          "add feature",
+          "new feature",
+          "build",
+          "feature",
+          "refactor",
+          "add support",
+          "wire up",
+          "endpoint",
+          "write code",
+          "add a flag",
+          "add an option",
+          "integrate",
+          "app",
+          "component"
+        ],
+        "avoid": [
+          "skill",
+          "prd",
+          "product requirements"
+        ],
+        "pairs_with": [
+          "verification-before-completion",
+          "test-driven-development"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.exec",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [
+        {
+          "action": "push-to-remote",
+          "always_confirm": true
+        },
+        {
+          "action": "deploy",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 7,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 4,
+        "status": "4 routing case(s) checked offline by scripts/run-evals.js; 7 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/engineering/software-engineer/SKILL.md",
+        "manifest": "skills/engineering/software-engineer/manifest.yaml",
+        "evals": "skills/engineering/software-engineer/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "systematic-debugging",
+      "description": "Finds the root cause of a bug, failing test, crash, error or regression by reproducing it, isolating it, and testing one hypothesis at a time before fixing, then proves the fix with a regression test. Use when something is broken, failing, flaky, throwing an exception, or behaving unexpectedly and the cause is not yet known.",
+      "category": "engineering",
+      "path": "skills/engineering/systematic-debugging/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "medium",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "debug"
+        ],
+        "triggers": [
+          "bug",
+          "error",
+          "fails",
+          "failing",
+          "crash",
+          "crashes",
+          "broken",
+          "exception",
+          "stack trace",
+          "regression",
+          "not working",
+          "doesn't work",
+          "debug",
+          "root cause",
+          "flaky",
+          "throws",
+          "segfault",
+          "500 error"
+        ],
+        "avoid": [],
+        "pairs_with": [
+          "verification-before-completion"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.exec",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/engineering/systematic-debugging/SKILL.md",
+        "manifest": "skills/engineering/systematic-debugging/manifest.yaml",
+        "evals": "skills/engineering/systematic-debugging/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "test-driven-development",
+      "description": "Writes tests before or alongside code using a red-green-refactor loop - specify one behaviour as a failing test, make it pass with the simplest change, then clean up with tests green. Use when adding tests, when behaviour can be specified up front, for bug fixes needing a regression test, or when asked for TDD or better coverage.",
+      "category": "engineering",
+      "path": "skills/engineering/test-driven-development/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; red-green-refactor is a widely known public practice; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "test"
+        ],
+        "triggers": [
+          "tdd",
+          "test first",
+          "test-first",
+          "write tests",
+          "write a test",
+          "unit test",
+          "unit tests",
+          "add tests",
+          "test coverage",
+          "coverage",
+          "red green",
+          "failing test",
+          "regression test",
+          "characterization tests"
+        ],
+        "avoid": [],
+        "pairs_with": [
+          "verification-before-completion"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.exec"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 5,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 5 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/engineering/test-driven-development/SKILL.md",
+        "manifest": "skills/engineering/test-driven-development/manifest.yaml",
+        "evals": "skills/engineering/test-driven-development/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "brain-curator",
+      "description": "Keeps the project brain (.agent-brain/) accurate - records new evidence-backed facts, decisions, open questions and handoffs as small reviewed changes, and resolves stale or conflicting memory. Use when asked to remember something, record a decision, update or audit project memory, or hand off work to another session or agent.",
+      "category": "meta",
+      "path": "skills/meta/brain-curator/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "brain"
+        ],
+        "triggers": [
+          "remember this",
+          "remember that",
+          "save to memory",
+          "update the brain",
+          "record a decision",
+          "record this decision",
+          "record the decision",
+          "decision record",
+          "we decided",
+          "decision log",
+          "handoff",
+          "hand off",
+          "hand this off",
+          "stale facts",
+          "brain audit",
+          "project memory",
+          "what do we know"
+        ],
+        "avoid": [],
+        "pairs_with": []
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 7,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 7 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/meta/brain-curator/SKILL.md",
+        "manifest": "skills/meta/brain-curator/manifest.yaml",
+        "evals": "skills/meta/brain-curator/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "codebase-explorer",
+      "description": "Answers \"how does this work / where is X / what calls Y\" questions about a codebase by tracing real code paths and citing file and symbol locations. Use for understanding architecture, entry points, data flow, module boundaries or the impact of a change before editing.",
+      "category": "meta",
+      "path": "skills/meta/codebase-explorer/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [],
+        "triggers": [
+          "how does",
+          "where is",
+          "find where",
+          "which file",
+          "trace",
+          "entry point",
+          "entry points",
+          "architecture",
+          "explain the code",
+          "explain this code",
+          "code map",
+          "call graph",
+          "data flow",
+          "what calls",
+          "what would break",
+          "codebase"
+        ],
+        "avoid": [
+          "skill"
+        ],
+        "pairs_with": []
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "shell.read-only",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/meta/codebase-explorer/SKILL.md",
+        "manifest": "skills/meta/codebase-explorer/manifest.yaml",
+        "evals": "skills/meta/codebase-explorer/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "project-initializer",
+      "description": "Builds an evidence-backed baseline understanding of a new or unfamiliar repository and records it in the project brain (.agent-brain/). Use when starting work in a repo for the first time, onboarding, when asked \"what is this project\", or when the brain is missing or badly out of date.",
+      "category": "meta",
+      "path": "skills/meta/project-initializer/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "brain"
+        ],
+        "triggers": [
+          "initialize the brain",
+          "init the brain",
+          "brain init",
+          "onboard",
+          "onboarding",
+          "new to this repo",
+          "understand this project",
+          "what is this project",
+          "project overview",
+          "get familiar",
+          "set up project memory",
+          "initialise"
+        ],
+        "avoid": [],
+        "pairs_with": [
+          "codebase-explorer"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 2,
+        "status": "2 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/meta/project-initializer/SKILL.md",
+        "manifest": "skills/meta/project-initializer/manifest.yaml",
+        "evals": "skills/meta/project-initializer/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "skill-author",
+      "description": "Creates a new Agent Skill (SKILL.md plus manifest and eval cases) for one narrow, repeatable workflow, following the open Agent Skills format so it works across agents. Use when asked to create, write, build or turn a workflow into a skill, or to package team know-how for agents.",
+      "category": "meta",
+      "path": "skills/meta/skill-author/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; format rules summarised from the Agent Skills specification (agentskills.io/specification, checked 2026-10-15), no text copied."
+      },
+      "routing": {
+        "intents": [
+          "skills"
+        ],
+        "triggers": [
+          "create a skill",
+          "write a skill",
+          "new skill",
+          "build a skill",
+          "make a skill",
+          "skill.md",
+          "agent skill",
+          "turn this into a skill",
+          "package this workflow",
+          "author a skill"
+        ],
+        "avoid": [
+          "review this skill",
+          "audit this skill"
+        ],
+        "pairs_with": [
+          "skill-reviewer"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.exec"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 4,
+        "status": "4 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/meta/skill-author/SKILL.md",
+        "manifest": "skills/meta/skill-author/manifest.yaml",
+        "evals": "skills/meta/skill-author/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "skill-reviewer",
+      "description": "Reviews an Agent Skill for trigger quality, scope, operational clarity, portability across agents, safety boundaries, evidence requirements and test coverage, and returns prioritised, concrete fixes. Use when asked to review, critique, improve or approve a SKILL.md or skill folder before publishing or installing it.",
+      "category": "meta",
+      "path": "skills/meta/skill-reviewer/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "skills"
+        ],
+        "triggers": [
+          "review this skill",
+          "review the skill",
+          "review my skill",
+          "skill review",
+          "critique this skill",
+          "improve this skill",
+          "skill quality",
+          "skill description",
+          "trigger description",
+          "approve this skill"
+        ],
+        "avoid": [
+          "is this skill safe",
+          "malicious"
+        ],
+        "pairs_with": [
+          "skill-package-audit"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "shell.exec"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 5,
+        "kinds": [
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 2,
+        "status": "2 routing case(s) checked offline by scripts/run-evals.js; 5 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/meta/skill-reviewer/SKILL.md",
+        "manifest": "skills/meta/skill-reviewer/manifest.yaml",
+        "evals": "skills/meta/skill-reviewer/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "task-planner",
+      "description": "Turns a request into a small, ordered execution plan with explicit acceptance criteria, risks, dependencies and verification steps, and records it in the project brain. Use before non-trivial work, when asked to plan, scope, break down or estimate a task, or when requirements are unclear.",
+      "category": "meta",
+      "path": "skills/meta/task-planner/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "plan"
+        ],
+        "triggers": [
+          "plan",
+          "make a plan",
+          "break down",
+          "breakdown",
+          "roadmap",
+          "acceptance criteria",
+          "scope this",
+          "estimate",
+          "milestones",
+          "how should we approach",
+          "think before coding",
+          "implementation plan"
+        ],
+        "avoid": [],
+        "pairs_with": []
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 5,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 5 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/meta/task-planner/SKILL.md",
+        "manifest": "skills/meta/task-planner/manifest.yaml",
+        "evals": "skills/meta/task-planner/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "verification-before-completion",
+      "description": "Gate before saying work is done - runs the relevant checks, compares results against the acceptance criteria, and reports each check as passed, failed, not run or blocked with the exact command. Use whenever finishing a code change, fix, migration or deliverable, and whenever asked whether something works, is ready, or passes.",
+      "category": "meta",
+      "path": "skills/meta/verification-before-completion/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [],
+        "triggers": [
+          "verify",
+          "verify it",
+          "is it done",
+          "check it works",
+          "make sure it works",
+          "confirm the fix",
+          "before merging",
+          "ready to ship",
+          "ready to merge",
+          "did the tests pass",
+          "do the tests pass",
+          "prove it works",
+          "double check"
+        ],
+        "avoid": [
+          "claim",
+          "source",
+          "citation",
+          "skill"
+        ],
+        "pairs_with": []
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "shell.exec",
+        "git.read"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": []
+      },
+      "approvals": [
+        {
+          "action": "deploy",
+          "always_confirm": true
+        },
+        {
+          "action": "change-production",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 2,
+        "status": "2 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/meta/verification-before-completion/SKILL.md",
+        "manifest": "skills/meta/verification-before-completion/manifest.yaml",
+        "evals": "skills/meta/verification-before-completion/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "source-verification",
+      "description": "Checks whether a specific claim, statistic, quote or citation is supported by its source - traces it to the primary source, compares exact wording, dates and scope, and returns a verdict (supported, partially supported, unsupported, contradicted, unverifiable) with evidence. Use for fact-checking, verifying citations or links, checking whether a source is credible, or before publishing claims.",
+      "category": "research",
+      "path": "skills/research/source-verification/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "research"
+        ],
+        "triggers": [
+          "verify this claim",
+          "fact check",
+          "fact-check",
+          "is this true",
+          "check the sources",
+          "check this source",
+          "check this citation",
+          "citation",
+          "citations",
+          "primary source",
+          "check this link",
+          "credible",
+          "is this statistic",
+          "verify the citation",
+          "verify the quote"
+        ],
+        "avoid": [],
+        "pairs_with": []
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": [
+          {
+            "id": "web.fetch",
+            "access": "read",
+            "purpose": "open cited sources and their primary sources",
+            "fallback": "verify only against documents the user provides; mark the rest unverifiable"
+          },
+          {
+            "id": "web.search",
+            "access": "read",
+            "purpose": "locate primary sources and independent confirmations",
+            "fallback": "limit verification to the cited sources"
+          }
+        ]
+      },
+      "approvals": [
+        {
+          "action": "publish",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/research/source-verification/SKILL.md",
+        "manifest": "skills/research/source-verification/manifest.yaml",
+        "evals": "skills/research/source-verification/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "web-research",
+      "description": "Researches a question using current web sources - plans the questions, searches, reads primary sources, records each claim with URL, publisher and dates, flags conflicts and gaps, and saves resumable findings to the project brain. Use for research, market or competitor analysis, comparing options, finding the latest information, or any answer that depends on facts that may have changed.",
+      "category": "research",
+      "path": "skills/research/web-research/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "low",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository; no third-party text copied."
+      },
+      "routing": {
+        "intents": [
+          "research"
+        ],
+        "triggers": [
+          "research",
+          "look up",
+          "find out",
+          "latest",
+          "current",
+          "sources",
+          "market size",
+          "market research",
+          "competitors",
+          "competitor analysis",
+          "compare options",
+          "search the web",
+          "what's new",
+          "state of the art",
+          "evaluate options",
+          "pricing of"
+        ],
+        "avoid": [
+          "verify this claim",
+          "fact check",
+          "fact-check"
+        ],
+        "pairs_with": [
+          "source-verification"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "filesystem.write"
+      ],
+      "capabilities": {
+        "required": [
+          {
+            "id": "web.search",
+            "access": "read",
+            "purpose": "find current sources for the research questions",
+            "fallback": "offline answer clearly labelled not current, built from user-provided material, with a list of claims to verify"
+          }
+        ],
+        "optional": [
+          {
+            "id": "web.fetch",
+            "access": "read",
+            "purpose": "read full source pages instead of search snippets",
+            "fallback": "rely on search snippets and mark affected claims as lower confidence"
+          }
+        ]
+      },
+      "approvals": [
+        {
+          "action": "publish",
+          "always_confirm": true
+        }
+      ],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 7,
+        "kinds": [
+          "ambiguous",
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 4,
+        "status": "4 routing case(s) checked offline by scripts/run-evals.js; 7 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/research/web-research/SKILL.md",
+        "manifest": "skills/research/web-research/manifest.yaml",
+        "evals": "skills/research/web-research/evals/cases.yaml"
+      }
+    },
+    {
+      "id": "skill-package-audit",
+      "description": "Audits a third-party Agent Skill or skill repository before it is installed or used - checks provenance and license, scans instructions and scripts for prompt injection, hidden text, credential access, data exfiltration, destructive or persistent commands, and reports a risk verdict with evidence. Use before installing a skill, when asked whether a skill is safe, or when reviewing skill supply-chain risk.",
+      "category": "security",
+      "path": "skills/security/skill-package-audit/SKILL.md",
+      "version": "0.1.0",
+      "maturity": "draft",
+      "risk": "medium",
+      "license": "Apache-2.0",
+      "owner": "agent-skills-brain maintainers",
+      "provenance": {
+        "origin": "first-party",
+        "authors": [
+          "agent-skills-brain contributors"
+        ],
+        "created": "2026-10-15",
+        "notes": "Independently written for this repository. Rule categories informed by public discussion of skill supply-chain risk (e.g. the Skill-audit project and MCP security guidance); no code or text copied."
+      },
+      "routing": {
+        "intents": [
+          "skills"
+        ],
+        "triggers": [
+          "audit this skill",
+          "audit the skill",
+          "is this skill safe",
+          "skill security",
+          "malicious",
+          "third-party skill",
+          "before installing",
+          "install this skill",
+          "scan the skill",
+          "scan this skill",
+          "prompt injection",
+          "supply chain",
+          "skill package"
+        ],
+        "avoid": [],
+        "pairs_with": [
+          "skill-reviewer"
+        ]
+      },
+      "local_permissions": [
+        "filesystem.read",
+        "shell.read-only"
+      ],
+      "capabilities": {
+        "required": [],
+        "optional": [
+          {
+            "id": "web.fetch",
+            "access": "read",
+            "purpose": "read the upstream repository page, license and release history",
+            "fallback": "audit the local copy only and mark provenance as unverified"
+          }
+        ]
+      },
+      "approvals": [],
+      "verified_agents": [],
+      "evaluation": {
+        "cases": 6,
+        "kinds": [
+          "edge",
+          "typical",
+          "unsupported-claim",
+          "untrusted-input"
+        ],
+        "routing_cases": 3,
+        "status": "3 routing case(s) checked offline by scripts/run-evals.js; 6 behaviour case(s) written, not yet run against an agent"
+      },
+      "links": {
+        "skill": "skills/security/skill-package-audit/SKILL.md",
+        "manifest": "skills/security/skill-package-audit/manifest.yaml",
+        "evals": "skills/security/skill-package-audit/evals/cases.yaml"
+      }
+    }
+  ]
+}

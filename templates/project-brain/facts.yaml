@@ -1,0 +1,4 @@
+# Structured project claims. Managed by the `brain` CLI; comments in this file are not preserved.
+# status: verified | observed | assumption | unknown | disputed | deprecated
+schema_version: 1
+facts: []

@@ -1,0 +1,25 @@
+schema_version: 1
+id: verification-before-completion
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: []
+  triggers: [verify, verify it, is it done, check it works, make sure it works, confirm the fix, before merging, ready to ship, ready to merge, did the tests pass, do the tests pass, prove it works, double check]
+  avoid: [claim, source, citation, skill]
+  pairs_with: []
+local_permissions: [filesystem.read, shell.exec, git.read]
+capabilities:
+  required: []
+  optional: []
+approvals:
+  - action: deploy
+    always_confirm: true
+  - action: change-production
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

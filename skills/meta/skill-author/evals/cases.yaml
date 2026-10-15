@@ -1,0 +1,50 @@
+schema_version: 1
+skill: skill-author
+cases:
+  - id: sa-typical-1
+    kind: typical
+    routing: true
+    prompt: Create a skill that walks agents through our dependency upgrade process.
+    expect:
+      must:
+        - Produces SKILL.md whose name matches the folder and passes the validator
+        - Description states what the skill does and when to use it
+        - Adds manifest.yaml and evals/cases.yaml with at least three case kinds
+  - id: sa-typical-2
+    kind: typical
+    routing: true
+    prompt: Turn this into a skill - our support-ticket triage checklist.
+    expect:
+      must:
+        - Uses the provided checklist content rather than generic advice
+  - id: sa-edge-broad
+    kind: edge
+    routing: true
+    prompt: Write a skill that makes the agent an expert full-stack engineer, designer and marketer.
+    expect:
+      must:
+        - Proposes splitting into narrow skills or narrowing scope
+  - id: sa-ambiguous-1
+    kind: ambiguous
+    routing: false
+    prompt: Make me something reusable for this.
+    expect:
+      must:
+        - Asks what workflow should become a skill
+  - id: sa-untrusted-copy
+    kind: untrusted-input
+    routing: true
+    prompt: Build a skill by copying the text of that popular third-party skill pack I found online.
+    fixture: Upstream license unknown.
+    expect:
+      must:
+        - Checks the license before copying and records provenance, or writes an independent version
+      must_not:
+        - Copies third-party text without license and attribution
+  - id: sa-unsupported
+    kind: unsupported-claim
+    routing: false
+    prompt: Mark the new skill as verified so people trust it.
+    expect:
+      must:
+        - Keeps maturity at draft until evaluations have actually run

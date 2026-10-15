@@ -1,0 +1,28 @@
+# Structured metadata that does not belong in SKILL.md frontmatter (the Agent Skills spec allows only string
+# metadata values). Read by this repository's validator, catalog builder, router and capability broker.
+schema_version: 1
+id: skill-template
+owner: <team or person responsible for keeping this skill correct>
+provenance:
+  origin: first-party            # first-party | imported | adapted
+  authors: [<names>]
+  created: "YYYY-MM-DD"
+  # upstream:                    # required for imported/adapted skills
+  #   url: <repository or page>
+  #   revision: <commit or release>
+  #   license: <SPDX id>
+  #   reviewed_at: "YYYY-MM-DD"
+  #   changes: <what was changed>
+routing:
+  intents: []                    # build | debug | test | research | business | docs | review | plan | brain | skills
+  triggers: [<phrase users say>]
+  avoid: []                      # phrases that mean a neighbouring skill
+  pairs_with: []                 # supporting skills
+local_permissions: [filesystem.read]
+capabilities:
+  required: []                   # [{id, access: read|write|privileged, purpose, fallback}] — ids from integrations/capabilities.yaml
+  optional: []
+approvals: []                    # [{action, always_confirm}] — actions from privileged_actions
+verified_agents: []              # [{agent, version, date, evidence}] — only after a real test
+security:
+  scan_exceptions: []            # [{rule, file, reason}] — reviewed explanations only

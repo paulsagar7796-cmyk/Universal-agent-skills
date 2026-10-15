@@ -1,0 +1,21 @@
+schema_version: 1
+id: test-driven-development
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; red-green-refactor is a widely known public practice; no third-party text copied.
+routing:
+  intents: [test]
+  triggers: [tdd, test first, test-first, write tests, write a test, unit test, unit tests, add tests, test coverage, coverage, red green, failing test, regression test, characterization tests]
+  avoid: []
+  pairs_with: [verification-before-completion]
+local_permissions: [filesystem.read, filesystem.write, shell.exec]
+capabilities:
+  required: []
+  optional: []
+approvals: []
+verified_agents: []
+security:
+  scan_exceptions: []

@@ -1,0 +1,21 @@
+schema_version: 1
+id: codebase-explorer
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: []
+  triggers: [how does, where is, find where, which file, trace, entry point, entry points, architecture, explain the code, explain this code, code map, call graph, data flow, what calls, what would break, codebase]
+  avoid: [skill]
+  pairs_with: []
+local_permissions: [filesystem.read, shell.read-only, git.read]
+capabilities:
+  required: []
+  optional: []
+approvals: []
+verified_agents: []
+security:
+  scan_exceptions: []

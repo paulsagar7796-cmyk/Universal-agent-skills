@@ -1,0 +1,27 @@
+schema_version: 1
+id: business-analyst
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [business]
+  triggers: [requirements, gather requirements, stakeholder, stakeholders, business process, business rules, user needs, as-is, to-be, business problem, use cases, startup idea, business idea, business case, what should we build, process improvement, evaluate a startup]
+  avoid: [prd, product requirements document]
+  pairs_with: [web-research]
+local_permissions: [filesystem.read, filesystem.write]
+capabilities:
+  required: []
+  optional:
+    - id: web.search
+      access: read
+      purpose: gather current market, competitor or regulatory context
+      fallback: offline analysis clearly labelled as not current, with a list of data to collect
+approvals:
+  - action: send-external-message
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

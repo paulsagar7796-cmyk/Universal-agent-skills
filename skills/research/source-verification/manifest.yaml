@@ -1,0 +1,31 @@
+schema_version: 1
+id: source-verification
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [research]
+  triggers: [verify this claim, fact check, fact-check, is this true, check the sources, check this source, check this citation, citation, citations, primary source, check this link, credible, is this statistic, verify the citation, verify the quote]
+  avoid: []
+  pairs_with: []
+local_permissions: [filesystem.read, filesystem.write]
+capabilities:
+  required: []
+  optional:
+    - id: web.fetch
+      access: read
+      purpose: open cited sources and their primary sources
+      fallback: verify only against documents the user provides; mark the rest unverifiable
+    - id: web.search
+      access: read
+      purpose: locate primary sources and independent confirmations
+      fallback: limit verification to the cited sources
+approvals:
+  - action: publish
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

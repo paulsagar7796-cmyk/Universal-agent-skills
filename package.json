@@ -1,0 +1,39 @@
+{
+  "name": "universal-agent-skills",
+  "version": "0.1.0",
+  "description": "Portable Agent Skills library plus an evidence-backed, local-first project brain with consent-gated agent lifecycle adapters.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulsagar7796-cmyk/Universal-agent-skills.git"
+  },
+  "bin": {
+    "brain": "bin/brain.js"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "skills/",
+    "catalog/",
+    "schemas/",
+    "templates/",
+    "integrations/",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "validate": "node scripts/validate-skills.js",
+    "catalog": "node scripts/build-catalog.js",
+    "catalog:check": "node scripts/build-catalog.js --check",
+    "scan": "node scripts/scan-skills.js",
+    "scan:secrets": "node scripts/scan-secrets.js",
+    "eval:routing": "node scripts/run-evals.js",
+    "check": "npm run validate && npm run catalog:check && npm run scan && npm run scan:secrets && npm run eval:routing && npm test"
+  }
+}

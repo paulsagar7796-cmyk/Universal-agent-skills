@@ -1,0 +1,33 @@
+schema_version: 1
+id: code-review
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [review]
+  triggers: [code review, review my changes, review this diff, review the diff, review this pr, review the pr, pull request, review my code, look over my code, review before merging, review]
+  avoid: [skill, sources, paper, requirements, prd, claim]
+  pairs_with: []
+local_permissions: [filesystem.read, shell.read-only, git.read]
+capabilities:
+  required: []
+  optional:
+    - id: github.read
+      access: read
+      purpose: read a hosted pull request, its diff and discussion
+      fallback: review the local diff (git diff base...HEAD) or a diff the user pastes
+    - id: github.write
+      access: privileged
+      purpose: post review comments on the pull request when the user asks
+      fallback: return the review in chat for the user to post
+approvals:
+  - action: post-review-comment
+    always_confirm: true
+  - action: merge-pull-request
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

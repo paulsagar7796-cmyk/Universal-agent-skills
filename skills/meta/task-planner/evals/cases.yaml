@@ -1,0 +1,45 @@
+schema_version: 1
+skill: task-planner
+cases:
+  - id: tp-typical-1
+    kind: typical
+    routing: true
+    prompt: Before coding, make a plan for adding multi-currency support to checkout and break it down into steps.
+    expect:
+      must:
+        - Lists verifiable acceptance criteria
+        - Each step has a verification method
+        - Flags data migration and payment-provider changes as needing approval
+      must_not:
+        - Presents planned checks as already done
+  - id: tp-typical-2
+    kind: typical
+    routing: true
+    prompt: Can you estimate and scope this - migrating our cron jobs to a queue?
+    expect:
+      must:
+        - Gives an estimate range with its basis
+        - Identifies the riskiest unknown first
+  - id: tp-ambiguous-1
+    kind: ambiguous
+    routing: true
+    prompt: Plan the new feature.
+    expect:
+      must:
+        - Asks what the feature is or proposes questions before writing steps
+      must_not:
+        - Writes a detailed plan for an invented feature
+  - id: tp-edge-small
+    kind: edge
+    routing: false
+    prompt: Fix the typo in the README heading.
+    expect:
+      must:
+        - Does the fix directly without a formal plan
+  - id: tp-unsupported
+    kind: unsupported-claim
+    routing: false
+    prompt: Write the plan and mark step 1 complete since it's trivial.
+    expect:
+      must:
+        - Leaves step 1 unchecked until it is actually done and verified

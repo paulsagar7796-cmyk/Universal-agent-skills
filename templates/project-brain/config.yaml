@@ -1,0 +1,14 @@
+# Project brain settings (all optional; defaults shown).
+schema_version: 1
+context:
+  max_chars: 6000      # budget for the session-start context packet (Claude Code caps hook context at 10,000 chars)
+  max_facts: 25
+  max_questions: 8
+memory:
+  auto_accept_low_risk: false   # true = apply uncontested observed/verified facts with checkable evidence without review
+retention:
+  events_days: 30      # local trace retention (local/events.jsonl)
+  max_event_lines: 5000
+routing:
+  max_skills: 3
+  min_score: 3

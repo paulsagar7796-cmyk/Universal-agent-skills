@@ -1,0 +1,7 @@
+node_modules/
+# Runtime state of any project brain (index, trace, consent, backups) — machine-local and rebuildable
+.agent-brain/local/
+# Regenerated on every eval run (contains the local Node version)
+evals/reports/
+*.tmp-*
+.DS_Store

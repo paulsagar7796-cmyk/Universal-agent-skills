@@ -1,0 +1,21 @@
+schema_version: 1
+id: skill-author
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; format rules summarised from the Agent Skills specification (agentskills.io/specification, checked 2026-10-15), no text copied.
+routing:
+  intents: [skills]
+  triggers: [create a skill, write a skill, new skill, build a skill, make a skill, skill.md, agent skill, turn this into a skill, package this workflow, author a skill]
+  avoid: [review this skill, audit this skill]
+  pairs_with: [skill-reviewer]
+local_permissions: [filesystem.read, filesystem.write, shell.exec]
+capabilities:
+  required: []
+  optional: []
+approvals: []
+verified_agents: []
+security:
+  scan_exceptions: []

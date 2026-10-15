@@ -1,0 +1,82 @@
+# Registry of external capabilities that skills may declare in their manifest.yaml.
+# Only URLs that were fetched and confirmed are listed (date in `verified_on`). If no verified link exists, the
+# field is omitted and the broker says so instead of guessing.
+#
+# claude_code_tools: tool-name regexes used by the optional PreToolUse enforcement hook to block a capability the
+# user has explicitly denied. Matching MCP tool names is a heuristic (server names are chosen by the user).
+schema_version: 1
+capabilities:
+  web.search:
+    description: Search the public web for current information
+    access_levels: [read]
+    providers:
+      - id: claude-code-websearch
+        host: claude-code
+        kind: built-in tool
+        setup: Built in. Availability depends on the account, model provider and permission settings; allow or deny the WebSearch tool in permission settings.
+        official_setup_url: https://code.claude.com/docs/en/tools-reference
+        verified_on: 2026-10-15
+      - id: host-native-search
+        host: any
+        kind: built-in or MCP tool
+        setup: Use the agent's own search tool or a search MCP server that the user chooses and trusts.
+    claude_code_tools:
+      read: ['^WebSearch$']
+  web.fetch:
+    description: Retrieve the content of a specific URL
+    access_levels: [read]
+    providers:
+      - id: claude-code-webfetch
+        host: claude-code
+        kind: built-in tool
+        setup: Built in; governed by WebFetch permission rules.
+        official_setup_url: https://code.claude.com/docs/en/tools-reference
+        verified_on: 2026-10-15
+    claude_code_tools:
+      read: ['^WebFetch$']
+  github.read:
+    description: Read repositories, issues and pull requests on GitHub
+    access_levels: [read]
+    providers:
+      - id: github-mcp-server
+        host: any-mcp-client
+        kind: MCP server (official, MIT)
+        setup: Add GitHub's official MCP server (supports a --read-only mode) through your agent's MCP configuration and authenticate with the host's OAuth flow. In Claude Code, run /mcp to authenticate.
+        official_setup_url: https://github.com/github/github-mcp-server
+        verified_on: 2026-10-15
+      - id: claude-code-mcp-docs
+        host: claude-code
+        kind: documentation
+        setup: How to add and authenticate MCP servers in Claude Code (claude mcp add, scopes, /mcp OAuth).
+        official_setup_url: https://code.claude.com/docs/en/mcp
+        verified_on: 2026-10-15
+    claude_code_tools:
+      read: ['^mcp__github__(get|list|search)_', '^mcp__github__\w+_read$']
+  github.write:
+    description: Create or change GitHub issues, comments, pull requests, branches or workflow runs
+    access_levels: [write, privileged]
+    providers:
+      - id: github-mcp-server
+        host: any-mcp-client
+        kind: MCP server (official, MIT)
+        setup: Same server as github.read without --read-only. Connecting does not authorize any individual write; each externally visible write still needs approval.
+        official_setup_url: https://github.com/github/github-mcp-server
+        verified_on: 2026-10-15
+    claude_code_tools:
+      write: ['^mcp__github__(create|update|delete|merge|push|add|fork|dismiss|request|assign)_', '^mcp__github__\w+_write$', '^mcp__github__actions_run_trigger$']
+
+# Matcher for the optional Claude Code PreToolUse enforcement hook: only these tools invoke the controller.
+claude_code_pretooluse_matcher: WebSearch|WebFetch|mcp__github__.*
+
+# High-impact actions. They need an explicit approval each time (or a narrowly scoped standing policy that the
+# user created) even when the relevant capability is connected.
+privileged_actions:
+  - send-external-message
+  - publish
+  - post-review-comment
+  - push-to-remote
+  - merge-pull-request
+  - delete-external-data
+  - deploy
+  - change-production
+  - spend-money

@@ -1,0 +1,30 @@
+# Cross-skill routing cases: prompts that should select nothing, avoid near-miss skills, or pick a specific top skill.
+schema_version: 1
+cases:
+  - id: rt-none-thanks
+    prompt: thanks, that's all for now
+    expect_none: true
+  - id: rt-none-smalltalk
+    prompt: good morning, how are you today?
+    expect_none: true
+  - id: rt-not-code-review-for-skill
+    prompt: Please review this skill's trigger description and improve it.
+    expect_not: [code-review]
+    expect_top: skill-reviewer
+  - id: rt-not-se-for-skill
+    prompt: Build a skill that teaches agents our release checklist.
+    expect_not: [software-engineer]
+    expect_top: skill-author
+  - id: rt-not-docs-for-prd
+    prompt: Write a product requirements document for the referral program.
+    expect_not: [documentation-engineering]
+    expect_top: prd-writer
+  - id: rt-top-debug
+    prompt: The API returns a 500 error and the stack trace points at the session middleware.
+    expect_top: systematic-debugging
+  - id: rt-top-audit-not-review
+    prompt: Is this skill safe to install? It has a scripts folder that calls curl.
+    expect_top: skill-package-audit
+  - id: rt-top-factcheck
+    prompt: Fact-check the statistic in this blog post before we quote it.
+    expect_top: source-verification

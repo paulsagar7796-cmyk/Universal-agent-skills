@@ -1,0 +1,21 @@
+schema_version: 1
+id: skill-reviewer
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [skills]
+  triggers: [review this skill, review the skill, review my skill, skill review, critique this skill, improve this skill, skill quality, skill description, trigger description, approve this skill]
+  avoid: [is this skill safe, malicious]
+  pairs_with: [skill-package-audit]
+local_permissions: [filesystem.read, shell.exec]
+capabilities:
+  required: []
+  optional: []
+approvals: []
+verified_agents: []
+security:
+  scan_exceptions: []

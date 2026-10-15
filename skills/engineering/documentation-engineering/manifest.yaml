@@ -1,0 +1,27 @@
+schema_version: 1
+id: documentation-engineering
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; doc-type split follows the widely used tutorial/how-to/reference/explanation convention; no third-party text copied.
+routing:
+  intents: [docs]
+  triggers: [readme, documentation, docs, document this, document the, changelog, api docs, api reference, setup guide, update the docs, docs are out of date, write a guide, how-to guide]
+  avoid: [requirements document, prd, product requirements]
+  pairs_with: []
+local_permissions: [filesystem.read, filesystem.write, shell.exec]
+capabilities:
+  required: []
+  optional:
+    - id: web.fetch
+      access: read
+      purpose: check that external links in the docs resolve
+      fallback: list external links as unchecked
+approvals:
+  - action: publish
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

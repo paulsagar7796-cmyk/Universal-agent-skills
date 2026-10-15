@@ -1,0 +1,74 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: read the repository, nothing else.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: validate, scan, evals, tests (node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        node: ['22.13.0', '24']
+        include:
+          - os: macos-latest
+            node: '24'
+    steps:
+      # Actions pinned to full commit SHAs (tag in comment); bump deliberately.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+      - name: No runtime dependencies or install-time scripts
+        run: |
+          node -e "const p=require('./package.json'); const bad=['preinstall','install','postinstall','prepare','prepublish','prepublishOnly'].filter(k=>p.scripts&&p.scripts[k]); if (bad.length||Object.keys(p.dependencies||{}).length) { console.error('lifecycle scripts or runtime deps found', bad, p.dependencies); process.exit(1) }"
+      - name: Validate skills (Agent Skills spec + repository policy)
+        run: node scripts/validate-skills.js
+      - name: Catalog is generated and in sync
+        run: node scripts/build-catalog.js --check
+      - name: Static skill security scan
+        run: node scripts/scan-skills.js
+      - name: Secret scan
+        run: node scripts/scan-secrets.js
+      - name: Routing evaluations (offline)
+        run: node scripts/run-evals.js
+      - name: Unit, integration and end-to-end tests
+        run: node --test tests/*.test.js
+
+  official-validator:
+    name: official skills-ref validator
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install skills-ref from the spec repository at a pinned commit
+        run: |
+          git clone --quiet https://github.com/agentskills/agentskills.git "$RUNNER_TEMP/agentskills"
+          git -C "$RUNNER_TEMP/agentskills" checkout --quiet 69ef37e9424c0a7ea9dd2293b559e43ec8176379
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "$RUNNER_TEMP/agentskills/skills-ref"
+      - name: Validate every skill
+        run: |
+          status=0
+          for d in skills/*/*/; do "$RUNNER_TEMP/venv/bin/skills-ref" validate "$d" || status=1; done
+          exit $status

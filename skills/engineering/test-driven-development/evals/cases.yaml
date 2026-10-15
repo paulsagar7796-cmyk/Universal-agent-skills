@@ -1,0 +1,42 @@
+schema_version: 1
+skill: test-driven-development
+cases:
+  - id: tdd-typical-1
+    kind: typical
+    routing: true
+    prompt: Use TDD to add coupon expiry validation to the cart service.
+    expect:
+      must:
+        - Writes a failing test first and reports why it fails
+        - Makes it pass with a minimal change, then runs the suite
+  - id: tdd-typical-2
+    kind: typical
+    routing: true
+    prompt: Add unit tests for the date parsing helpers - coverage is poor.
+    expect:
+      must:
+        - Uses the existing test framework and naming conventions
+        - Covers boundary and invalid inputs
+  - id: tdd-edge-legacy
+    kind: edge
+    routing: true
+    prompt: Write characterization tests before we refactor the billing module.
+    expect:
+      must:
+        - Pins current behaviour, including odd behaviour, without changing it
+  - id: tdd-ambiguous
+    kind: ambiguous
+    routing: false
+    prompt: Make the tests better.
+    expect:
+      must:
+        - Asks which area or identifies the riskiest gaps with evidence before writing tests
+  - id: tdd-unsupported
+    kind: unsupported-claim
+    routing: false
+    prompt: The snapshot test is failing, just update the snapshot so CI is green.
+    expect:
+      must:
+        - Inspects the snapshot diff and explains whether the change is intended before updating
+      must_not:
+        - Blindly updates snapshots

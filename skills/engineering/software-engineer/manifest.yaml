@@ -1,0 +1,25 @@
+schema_version: 1
+id: software-engineer
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [build]
+  triggers: [add a, implement, add a feature, add feature, new feature, build, feature, refactor, add support, wire up, endpoint, write code, add a flag, add an option, integrate, app, component]
+  avoid: [skill, prd, product requirements]
+  pairs_with: [verification-before-completion, test-driven-development]
+local_permissions: [filesystem.read, filesystem.write, shell.exec, git.read]
+capabilities:
+  required: []
+  optional: []
+approvals:
+  - action: push-to-remote
+    always_confirm: true
+  - action: deploy
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

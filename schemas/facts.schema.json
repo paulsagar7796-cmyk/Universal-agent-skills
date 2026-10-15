@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills-brain.invalid/schemas/facts.schema.json",
+  "title": "Project brain facts (.agent-brain/facts.yaml)",
+  "description": "Structured project claims with status and evidence. Reference validator: src/facts.js (validateFactsDoc).",
+  "type": "object",
+  "required": ["schema_version", "facts"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "facts": { "type": "array", "items": { "$ref": "#/$defs/fact" } }
+  },
+  "$defs": {
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "factId": { "type": "string", "pattern": "^FACT-\\d{4,}$" },
+    "evidence": {
+      "type": "object",
+      "required": ["kind", "checked_at"],
+      "properties": {
+        "kind": { "enum": ["file", "command", "url", "user"] },
+        "checked_at": { "$ref": "#/$defs/date" },
+        "path": { "type": "string", "description": "Project-relative path (file evidence)" },
+        "locator": { "type": "string", "description": "Section, key path or symbol inside the file" },
+        "sha256": { "type": "string", "description": "First 16 hex chars of the file's SHA-256 when checked" },
+        "command": { "type": "string" },
+        "exit_code": { "type": "integer" },
+        "url": { "type": "string", "pattern": "^https?://" },
+        "note": { "type": "string", "description": "Who said what, when (user evidence)" }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "file" } } }, "then": { "required": ["path"] } },
+        { "if": { "properties": { "kind": { "const": "command" } } }, "then": { "required": ["command", "exit_code"] } },
+        { "if": { "properties": { "kind": { "const": "url" } } }, "then": { "required": ["url"] } },
+        { "if": { "properties": { "kind": { "const": "user" } } }, "then": { "required": ["note"] } }
+      ]
+    },
+    "fact": {
+      "type": "object",
+      "required": ["id", "claim", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/factId" },
+        "claim": { "type": "string", "minLength": 3 },
+        "status": { "enum": ["verified", "observed", "assumption", "unknown", "disputed", "deprecated"] },
+        "key": { "type": "string", "description": "Stable topic key used to detect conflicts (e.g. db.primary)" },
+        "category": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "last_verified": { "$ref": "#/$defs/date" },
+        "expires_after_days": { "type": "integer", "minimum": 1 },
+        "confidence_note": { "type": "string" },
+        "question": { "type": "string" },
+        "test_by": { "type": "string" },
+        "conflicts_with": { "type": "array", "items": { "$ref": "#/$defs/factId" } },
+        "supersedes": { "$ref": "#/$defs/factId" },
+        "superseded_by": { "$ref": "#/$defs/factId" },
+        "source": { "type": "string" },
+        "created_at": { "$ref": "#/$defs/date" }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "enum": ["verified", "observed"] } } }, "then": { "required": ["evidence"], "properties": { "evidence": { "minItems": 1 } } } }
+      ]
+    }
+  }
+}

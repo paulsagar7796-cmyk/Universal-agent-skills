@@ -1,0 +1,21 @@
+schema_version: 1
+id: brain-curator
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [brain]
+  triggers: [remember this, remember that, save to memory, update the brain, record a decision, record this decision, record the decision, decision record, we decided, decision log, handoff, hand off, hand this off, stale facts, brain audit, project memory, what do we know]
+  avoid: []
+  pairs_with: []
+local_permissions: [filesystem.read, filesystem.write, git.read]
+capabilities:
+  required: []
+  optional: []
+approvals: []
+verified_agents: []
+security:
+  scan_exceptions: []

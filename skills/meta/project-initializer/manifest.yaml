@@ -1,0 +1,21 @@
+schema_version: 1
+id: project-initializer
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [brain]
+  triggers: [initialize the brain, init the brain, brain init, onboard, onboarding, new to this repo, understand this project, what is this project, project overview, get familiar, set up project memory, initialise]
+  avoid: []
+  pairs_with: [codebase-explorer]
+local_permissions: [filesystem.read, filesystem.write, git.read]
+capabilities:
+  required: []
+  optional: []
+approvals: []
+verified_agents: []
+security:
+  scan_exceptions: []

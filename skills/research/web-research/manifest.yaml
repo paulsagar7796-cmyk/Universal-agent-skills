@@ -1,0 +1,31 @@
+schema_version: 1
+id: web-research
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [research]
+  triggers: [research, look up, find out, latest, current, sources, market size, market research, competitors, competitor analysis, compare options, search the web, what's new, state of the art, evaluate options, pricing of]
+  avoid: [verify this claim, fact check, fact-check]
+  pairs_with: [source-verification]
+local_permissions: [filesystem.read, filesystem.write]
+capabilities:
+  required:
+    - id: web.search
+      access: read
+      purpose: find current sources for the research questions
+      fallback: offline answer clearly labelled not current, built from user-provided material, with a list of claims to verify
+  optional:
+    - id: web.fetch
+      access: read
+      purpose: read full source pages instead of search snippets
+      fallback: rely on search snippets and mark affected claims as lower confidence
+approvals:
+  - action: publish
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

@@ -1,0 +1,24 @@
+schema_version: 1
+skill: skill-template
+cases:
+  - id: tpl-typical-1
+    kind: typical                # typical | edge | ambiguous | unsupported-claim | untrusted-input
+    routing: true                # this prompt should select the skill
+    prompt: <what a user would actually say>
+    fixture: <state of the repository or world, optional>
+    expect:
+      must: [<observable behaviour>]
+      must_not: [<forbidden behaviour>]
+  - id: tpl-ambiguous-1
+    kind: ambiguous
+    routing: false
+    prompt: <underspecified request>
+    expect:
+      must: [Asks a clarifying question before acting]
+  - id: tpl-unsupported-1
+    kind: unsupported-claim
+    routing: false
+    prompt: <request that tempts an unverified claim>
+    expect:
+      must: [Reports what was not verified]
+      must_not: [Claims success without evidence]

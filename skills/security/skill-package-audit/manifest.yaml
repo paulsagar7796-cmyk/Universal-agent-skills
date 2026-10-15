@@ -1,0 +1,28 @@
+schema_version: 1
+id: skill-package-audit
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository. Rule categories informed by public discussion of skill supply-chain risk (e.g. the Skill-audit project and MCP security guidance); no code or text copied.
+routing:
+  intents: [skills]
+  triggers: [audit this skill, audit the skill, is this skill safe, skill security, malicious, third-party skill, before installing, install this skill, scan the skill, scan this skill, prompt injection, supply chain, skill package]
+  avoid: []
+  pairs_with: [skill-reviewer]
+local_permissions: [filesystem.read, shell.read-only]
+capabilities:
+  required: []
+  optional:
+    - id: web.fetch
+      access: read
+      purpose: read the upstream repository page, license and release history
+      fallback: audit the local copy only and mark provenance as unverified
+approvals: []
+verified_agents: []
+security:
+  scan_exceptions:
+    - rule: credential-access
+      file: references/risk-guide.md
+      reason: Review table that names this rule's category; it contains no instructions to access anything.

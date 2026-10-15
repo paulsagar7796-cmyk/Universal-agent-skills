@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills-brain.invalid/schemas/capabilities.schema.json",
+  "title": "Capability registry (integrations/capabilities.yaml)",
+  "type": "object",
+  "required": ["schema_version", "capabilities", "privileged_actions"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "access_levels", "providers"],
+        "properties": {
+          "description": { "type": "string" },
+          "access_levels": { "type": "array", "items": { "enum": ["read", "write", "privileged"] } },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "host", "kind", "setup"],
+              "properties": {
+                "id": { "type": "string" },
+                "host": { "type": "string" },
+                "kind": { "type": "string" },
+                "setup": { "type": "string" },
+                "official_setup_url": { "type": "string", "pattern": "^https://" },
+                "verified_on": { "type": "string", "description": "Required whenever official_setup_url is present" }
+              },
+              "dependentRequired": { "official_setup_url": ["verified_on"] }
+            }
+          },
+          "claude_code_tools": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }
+        }
+      }
+    },
+    "claude_code_pretooluse_matcher": { "type": "string" },
+    "privileged_actions": { "type": "array", "items": { "type": "string" } }
+  }
+}

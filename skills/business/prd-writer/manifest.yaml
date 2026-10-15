@@ -1,0 +1,25 @@
+schema_version: 1
+id: prd-writer
+owner: agent-skills-brain maintainers
+provenance:
+  origin: first-party
+  authors: [agent-skills-brain contributors]
+  created: "2026-10-15"
+  notes: Independently written for this repository; no third-party text copied.
+routing:
+  intents: [business, docs]
+  triggers: [prd, product requirements, product requirements document, product spec, spec out, feature spec, requirements document, product brief, write a spec]
+  avoid: []
+  pairs_with: [business-analyst]
+local_permissions: [filesystem.read, filesystem.write]
+capabilities:
+  required: []
+  optional: []
+approvals:
+  - action: publish
+    always_confirm: true
+  - action: send-external-message
+    always_confirm: true
+verified_agents: []
+security:
+  scan_exceptions: []

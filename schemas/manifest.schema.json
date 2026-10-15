@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills-brain.invalid/schemas/manifest.schema.json",
+  "title": "Skill manifest (skills/<category>/<name>/manifest.yaml)",
+  "description": "Structured skill metadata kept outside SKILL.md frontmatter (whose metadata must be string→string). Reference validator: src/validate.js.",
+  "type": "object",
+  "required": ["schema_version", "id", "owner", "provenance", "routing"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 64 },
+    "owner": { "type": "string" },
+    "provenance": {
+      "type": "object",
+      "required": ["origin", "authors"],
+      "properties": {
+        "origin": { "enum": ["first-party", "imported", "adapted"] },
+        "authors": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "created": { "type": "string" },
+        "notes": { "type": "string" },
+        "upstream": {
+          "type": "object",
+          "required": ["url", "revision", "license", "reviewed_at"],
+          "properties": { "url": { "type": "string" }, "revision": { "type": "string" }, "license": { "type": "string" }, "reviewed_at": { "type": "string" }, "changes": { "type": "string" } }
+        }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "required": ["triggers"],
+      "properties": {
+        "intents": { "type": "array", "items": { "enum": ["build", "debug", "test", "research", "business", "docs", "review", "plan", "brain", "skills"] } },
+        "triggers": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "avoid": { "type": "array", "items": { "type": "string" } },
+        "pairs_with": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "local_permissions": { "type": "array", "items": { "enum": ["filesystem.read", "filesystem.write", "shell.read-only", "shell.exec", "git.read", "git.write"] } },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "required": { "type": "array", "items": { "$ref": "#/$defs/capability" } },
+        "optional": { "type": "array", "items": { "$ref": "#/$defs/capability" } }
+      }
+    },
+    "approvals": { "type": "array", "items": { "type": "object", "required": ["action"], "properties": { "action": { "type": "string" }, "always_confirm": { "type": "boolean" } } } },
+    "verified_agents": { "type": "array", "items": { "type": "object", "required": ["agent", "version", "date", "evidence"], "properties": { "agent": { "type": "string" }, "version": { "type": "string" }, "date": { "type": "string" }, "evidence": { "type": "string" } } } },
+    "security": { "type": "object", "properties": { "scan_exceptions": { "type": "array", "items": { "type": "object", "required": ["rule", "file", "reason"], "properties": { "rule": { "type": "string" }, "file": { "type": "string" }, "reason": { "type": "string" } } } } } }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "required": ["id", "access", "purpose"],
+      "properties": {
+        "id": { "type": "string", "description": "Key in integrations/capabilities.yaml" },
+        "access": { "enum": ["read", "write", "privileged"] },
+        "purpose": { "type": "string" },
+        "fallback": { "type": "string" }
+      }
+    }
+  }
+}

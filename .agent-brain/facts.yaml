@@ -1,0 +1,285 @@
+# Structured project claims. Managed by the `brain` CLI; comments in this file are not preserved.
+# status: verified | observed | assumption | unknown | disputed | deprecated
+schema_version: 1
+facts:
+  - id: FACT-0001
+    claim: The project is a git repository.
+    status: verified
+    key: repo.vcs
+    category: repository
+    evidence:
+      - kind: command
+        command: git rev-parse --show-toplevel
+        exit_code: 0
+        checked_at: "2026-10-15"
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0002
+    claim: "A README exists (README.md) titled \"agent-skills-brain\"."
+    status: deprecated
+    key: docs.readme
+    category: documentation
+    evidence:
+      - kind: file
+        path: README.md
+        checked_at: "2026-10-15"
+        sha256: a4fec144af8fa641
+        locator: first heading
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+    superseded_by: FACT-0019
+    confidence_note: Re-scan on 2026-10-15 observed a different value.
+  - id: FACT-0003
+    claim: Agent instruction file AGENTS.md exists; read it before changing code.
+    status: observed
+    key: instructions.agents.md
+    category: instructions
+    evidence:
+      - kind: file
+        path: AGENTS.md
+        checked_at: "2026-10-15"
+        sha256: "5f00960dfb92372e"
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0004
+    claim: The repository license file (LICENSE) appears to be Apache-2.0 (header text match).
+    status: observed
+    key: license
+    category: legal
+    evidence:
+      - kind: file
+        path: LICENSE
+        checked_at: "2026-10-15"
+        sha256: cfc7749b96f63bd3
+        locator: header
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0005
+    claim: "Node.js package \"agent-skills-brain\" is defined in package.json (private)."
+    status: deprecated
+    key: node.package
+    category: stack
+    evidence:
+      - kind: file
+        path: package.json
+        checked_at: "2026-10-15"
+        sha256: f000797a5afbb432
+        locator: name
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+    superseded_by: FACT-0020
+    confidence_note: Re-scan on 2026-10-15 observed a different value.
+  - id: FACT-0006
+    claim: "package.json sets \"type\": \"module\" (ES modules)."
+    status: observed
+    key: node.module_type
+    category: stack
+    evidence:
+      - kind: file
+        path: package.json
+        checked_at: "2026-10-15"
+        sha256: "08d3f82592271fa4"
+        locator: type
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0007
+    claim: "package.json requires Node >=22.13.0."
+    status: observed
+    key: node.engines
+    category: runtime
+    evidence:
+      - kind: file
+        path: package.json
+        checked_at: "2026-10-15"
+        sha256: "08d3f82592271fa4"
+        locator: engines.node
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0008
+    claim: "package.json declares a \"test\" script: `node --test tests/*.test.js` (not run during init)."
+    status: observed
+    key: command.test
+    category: commands
+    evidence:
+      - kind: file
+        path: package.json
+        checked_at: "2026-10-15"
+        sha256: "08d3f82592271fa4"
+        locator: scripts.test
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0009
+    claim: "package.json \"bin\" entry point: bin/brain.js."
+    status: observed
+    key: entry.bin
+    category: structure
+    evidence:
+      - kind: file
+        path: package.json
+        checked_at: "2026-10-15"
+        sha256: "08d3f82592271fa4"
+        locator: bin
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0010
+    claim: "GitHub Actions workflows exist: ci.yml."
+    status: observed
+    key: ci.github_actions
+    category: ci
+    evidence:
+      - kind: file
+        path: .github/workflows/ci.yml
+        checked_at: "2026-10-15"
+        sha256: "0ca8ea71b4c2cc8e"
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0011
+    claim: "Unknown: No JS lockfile found; which package manager and versions are intended?"
+    status: unknown
+    key: tooling.package_manager
+    category: open-question
+    question: "No JS lockfile found; which package manager and versions are intended?"
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0012
+    claim: "Unknown: Is the README description an accurate statement of the product goal and target users?"
+    status: unknown
+    key: product.goal
+    category: open-question
+    question: "Is the README description an accurate statement of the product goal and target users?"
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0013
+    claim: "Unknown: Where and how is this deployed or released (environments, approvals)?"
+    status: unknown
+    key: deployment.target
+    category: open-question
+    question: "Where and how is this deployed or released (environments, approvals)?"
+    source: init
+    created_at: "2026-10-15"
+  - id: FACT-0014
+    claim: "Unknown: Do the declared checks pass on a clean checkout? Not run during init: npm run test."
+    status: deprecated
+    key: verification.baseline
+    category: open-question
+    question: "Do the declared checks pass on a clean checkout? Not run during init: npm run test."
+    source: init
+    created_at: "2026-10-15"
+    confidence_note: Answered by FACT-0017 on 2026-10-15 (corrected after a same-key answer was wrongly marked as a conflict; fixed in src/proposals.js).
+    superseded_by: FACT-0017
+  - id: FACT-0015
+    claim: All 17 skills pass the official skills-ref validator at agentskills/agentskills commit 69ef37e.
+    status: verified
+    key: quality.official-validator
+    category: quality
+    evidence:
+      - kind: command
+        command: "skills-ref validate skills/<category>/<name>/"
+        exit_code: 0
+        checked_at: "2026-10-15"
+    last_verified: "2026-10-15"
+    expires_after_days: 90
+    source: agent
+    created_at: "2026-10-15"
+  - id: FACT-0016
+    claim: Claude Code 2.1.300 delivers SessionStart context from the brain hook and enforces denied capabilities via PreToolUse (real claude -p runs in a fixture project).
+    status: verified
+    key: compat.claude-code
+    category: compatibility
+    evidence:
+      - kind: command
+        command: claude -p (Claude Code 2.1.300, fixture project; see docs/compatibility.md)
+        exit_code: 0
+        checked_at: "2026-10-15"
+      - kind: file
+        path: docs/compatibility.md
+        checked_at: "2026-10-15"
+        sha256: "484ddb7b1c7b7db1"
+    last_verified: "2026-10-15"
+    expires_after_days: 90
+    source: agent
+    created_at: "2026-10-15"
+  - id: FACT-0017
+    claim: The full test suite passes on Node 24.21.0 (72/72) and on Node 22.13.0 (67 pass, 5 SQLite/FTS5-only tests skipped).
+    status: deprecated
+    key: verification.baseline
+    category: verification
+    evidence:
+      - kind: command
+        command: "node --test tests/*.test.js"
+        exit_code: 0
+        checked_at: "2026-10-15"
+    last_verified: "2026-10-15"
+    expires_after_days: 30
+    source: agent
+    created_at: "2026-10-15"
+    supersedes: FACT-0014
+    superseded_by: FACT-0018
+    confidence_note: Superseded by FACT-0018 on 2026-10-15.
+  - id: FACT-0018
+    claim: The full test suite passes on Node 24.21.0 (73/73) and on Node 22.13.0 (68 pass, 5 SQLite/FTS5-only tests skipped).
+    status: verified
+    key: verification.baseline
+    category: verification
+    evidence:
+      - kind: command
+        command: "node --test tests/*.test.js"
+        exit_code: 0
+        checked_at: "2026-10-15"
+    last_verified: "2026-10-15"
+    expires_after_days: 30
+    source: agent
+    created_at: "2026-10-15"
+    supersedes: FACT-0017
+  - id: FACT-0019
+    claim: "A README exists (README.md) titled \"Universal-agent-skills\"."
+    status: observed
+    key: docs.readme
+    category: documentation
+    evidence:
+      - kind: file
+        path: README.md
+        checked_at: "2026-10-15"
+        sha256: "8711496c23b9d9af"
+        locator: first heading
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+    supersedes: FACT-0002
+  - id: FACT-0020
+    claim: "Node.js package \"universal-agent-skills\" is defined in package.json (private)."
+    status: observed
+    key: node.package
+    category: stack
+    evidence:
+      - kind: file
+        path: package.json
+        checked_at: "2026-10-15"
+        sha256: "08d3f82592271fa4"
+        locator: name
+    last_verified: "2026-10-15"
+    expires_after_days: 180
+    source: init
+    created_at: "2026-10-15"
+    supersedes: FACT-0005

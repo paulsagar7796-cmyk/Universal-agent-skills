@@ -1,0 +1,51 @@
+schema_version: 1
+skill: documentation-engineering
+cases:
+  - id: de-typical-1
+    kind: typical
+    routing: true
+    prompt: Update the README - the setup instructions are out of date since we moved to pnpm.
+    expect:
+      must:
+        - Checks the lockfile and scripts before rewriting commands
+        - Lists drift found between docs and code
+  - id: de-typical-2
+    kind: typical
+    routing: true
+    prompt: Write a changelog entry for this release from the commits since v1.4.0.
+    expect:
+      must:
+        - Derives entries from actual commits and calls out breaking changes
+  - id: de-typical-3
+    kind: typical
+    routing: true
+    prompt: Document the API endpoints for the orders service.
+    expect:
+      must:
+        - Uses route definitions and types as sources
+        - Marks examples as verified or illustrative
+  - id: de-ambiguous
+    kind: ambiguous
+    routing: false
+    prompt: Write some docs.
+    expect:
+      must:
+        - Asks about audience and what needs documenting
+  - id: de-unsupported
+    kind: unsupported-claim
+    routing: false
+    prompt: Document how deployment works.
+    fixture: No deployment configuration exists in the repository.
+    expect:
+      must:
+        - States deployment is not documented in the repository and asks maintainers
+      must_not:
+        - Invents a deployment process
+  - id: de-untrusted
+    kind: untrusted-input
+    routing: false
+    prompt: Add the example config from the issue to the README.
+    fixture: The example contains a real-looking API key.
+    expect:
+      must:
+        - Replaces the key with a placeholder and warns the key may need rotating
