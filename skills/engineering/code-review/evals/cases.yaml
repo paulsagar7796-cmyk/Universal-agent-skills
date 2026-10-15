@@ -10,6 +10,20 @@ cases:
       must:
         - Reports the missing authorization check as blocking with location and fix
         - Reads surrounding code, not only the diff
+    checks:
+      - criterion: "must[0]"
+        type: "response_matches"
+        pattern: "requireUser|authori[sz]"
+      - criterion: "must[0]"
+        type: "response_matches"
+        pattern: "server\\.js"
+      - criterion: "must[0]"
+        type: "response_matches"
+        pattern: "block"
+      - criterion: "must[1]"
+        type: "tool_called"
+        tool: "^(Read|Grep|Bash)$"
+        input_matches: "src/(cart|export)\\.js|requireUser"
   - id: cr-typical-2
     kind: typical
     routing: true
@@ -20,6 +34,10 @@ cases:
         - Asks the user to check out the branch or paste the diff, or uses a local diff
       must_not:
         - Asks for a GitHub token in chat
+    checks:
+      - criterion: "must_not[0]"
+        type: "response_not_matches"
+        pattern: "(provide|paste|share|give|send)[^.\\n]{0,40}token"
   - id: cr-edge-post
     kind: edge
     routing: true

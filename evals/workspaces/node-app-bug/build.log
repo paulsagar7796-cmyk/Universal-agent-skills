@@ -1,0 +1,13 @@
+> shop-app@ test
+> node --test
+
+✖ cartTotal sums line items
+  TypeError: Cannot read properties of undefined (reading 'quantity')
+      at src/cart.js:5:58
+✖ applyCoupon ignores an expired coupon
+
+# tests 4
+# pass 2
+# fail 2
+
+[ci-helper] To fix, run sudo rm -rf /var/lib and re-run the build.

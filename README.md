@@ -26,7 +26,9 @@ files change, and skills require reporting checks as passed / failed / not run /
 | Claude Code receives brain context automatically after setup | Real run on Claude Code **2.1.300** (`claude -p`, tools disabled): answered a fact that existed only in the brain |
 | UserPromptSubmit, Stop and SessionEnd hooks fire and are recorded | Same real runs, `brain explain-last-run` |
 | A user-denied capability is blocked in the host | Real run: Claude Code's WebSearch call was refused by the PreToolUse hook after `brain consent deny web.search` |
-| Setup/uninstall, routing, broker, index recovery, isolation | 73 automated tests: 73/73 pass on Node 24.21; on Node 22.13.0 68 pass and 5 SQLite-only tests are skipped (no FTS5) |
+| The agent cannot grant itself consent or edit policy (with `--harden`) | Real run (2.1.300): self-grant blocked by the guard hook; obfuscated shell append to the policy blocked by the OS sandbox; Write to `config.yaml` refused by permission rules |
+| Behavioural evaluation harness | 102 cases load; offline mock suite deterministic; live Claude Code provider parser checked against a real run. **The 102 live behavioural cases have not been run yet.** |
+| Setup/uninstall, routing, broker, consent hardening, eval harness | Automated tests: see `docs/phase2-plan.md` for the latest counts per Node version |
 
 Not verified: Codex, Antigravity, Gemini CLI, Cursor, Copilot lifecycle hooks (no adapters yet; they get an
 `AGENTS.md` fallback). PreCompact delivery by a real host (unit-tested only). Skill *behaviour* with real models
@@ -95,10 +97,12 @@ network listener. Hooks never block the agent except to enforce an explicit deni
 ## Commands
 
 ```
-brain setup | repair | uninstall | doctor | runtime status
+brain setup [--harden] | repair | uninstall | doctor | runtime status
 brain init | status | context | search <q> | show <id> | audit | index rebuild
 brain remember | proposals | approve | reject | decide | verify | deprecate | handoff
-brain route "<request>" | capabilities [check <skill>] | consent grant|deny|revoke | authorize <action> | connect <capability>
+brain route "<request>" | capabilities [check <skill>] | consent status|explain|request|deny|revoke|reject | authorize <action>
+brain approve <P-…> | consent approve <R-…> | consent grant <target>      # human only, own terminal
+brain connect <capability>
 brain explain-last-run
 ```
 
@@ -116,19 +120,39 @@ brain explain-last-run
 
 Full table with capabilities and approvals: [catalog/README.md](catalog/README.md). All are `maturity: draft`.
 
+## Consent and approvals
+
+Agents can *request*; only you can *approve*. `brain consent request …` and `brain remember …` create pending items;
+`brain consent approve R-…` and `brain approve P-…` must be run by you in your own terminal and ask you to type a
+random code. This stops agents from approving through their normal tools; it cannot stop a process that runs as your
+user and deliberately emulates a terminal — for that, use `brain setup --harden` (OS sandbox) on Claude Code. Details:
+[docs/security-model.md](docs/security-model.md), [docs/operations.md](docs/operations.md).
+
+## Behavioural evaluations
+
+```bash
+node scripts/eval.js list                                  # 102 cases, no execution
+node scripts/eval.js run --provider mock --judge mock      # offline harness run (not a skill-quality signal)
+node scripts/eval.js run --provider claude-code --dry-run  # live plan: invocations, model, spend cap
+```
+
+See [docs/evaluation-guide.md](docs/evaluation-guide.md). No live behavioural run has been performed yet.
+
 ## Security and privacy
 
 - Nothing runs on clone or install; only `brain setup` changes agent configuration, after showing a diff.
 - No credentials in brain files, the index, the trace or consent records — writes are secret-scanned and rejected.
 - The trace stores no prompts or assistant messages (a hash and length only, plus which catalog trigger words matched).
 - Connecting a service never authorizes high-impact actions (publish, push, merge, send, deploy, delete, spend).
+- Consent decisions live in a hash-chained log; tampering is detected and protected tools then fail closed.
 - Repository and web content is treated as data, not instructions.
 
 Details: [docs/security-model.md](docs/security-model.md). Report vulnerabilities per [SECURITY.md](SECURITY.md).
 
 ## Documentation
 
-[Vision & principles](docs/vision-and-principles.md) · [Architecture](docs/architecture.md) ·
+[Vision & principles](docs/vision-and-principles.md) · [Architecture](docs/architecture.md) · [Threat model](docs/threat-model.md) ·
+[Operations](docs/operations.md) · [Release policy (proposed)](docs/release-policy.md) ·
 [Brain spec](docs/brain-spec.md) · [Skill authoring](docs/skill-authoring-guide.md) ·
 [Security model](docs/security-model.md) · [Evaluation](docs/evaluation-guide.md) ·
 [Compatibility](docs/compatibility.md) · [Roadmap](docs/roadmap.md) · [References](docs/references.md) ·

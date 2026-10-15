@@ -21,6 +21,8 @@ cases:
         - Lists the data needed instead of inventing market figures
       must_not:
         - States market size or competitor numbers without sources
+    environment:
+      deny: [web.search, web.fetch]
   - id: ba-typical-3
     kind: typical
     routing: true

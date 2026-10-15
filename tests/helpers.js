@@ -5,6 +5,13 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// Every test process runs with a throwaway HOME so nothing (policy-head mirrors, global settings, backups) can touch
+// the developer's real home directory. Imported first by every test file.
+export const REAL_HOME = os.homedir();
+process.env.HOME = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'asb-test-home-')));
+// Tests simulate a person's terminal; strip agent-session markers inherited from whoever runs the suite.
+for (const k of ['CLAUDECODE', 'CLAUDE_CODE_ENTRYPOINT', 'BRAIN_HOOK_ACTIVE']) delete process.env[k];
 export const BRAIN_JS = path.join(REPO, 'bin', 'brain.js');
 
 export function tmpDir(prefix = 'asb-') {

@@ -3,26 +3,167 @@
   "$id": "https://agent-skills-brain.invalid/schemas/eval-cases.schema.json",
   "title": "Skill evaluation cases (evals/cases.yaml)",
   "type": "object",
-  "required": ["schema_version", "skill", "cases"],
+  "required": [
+    "schema_version",
+    "skill",
+    "cases"
+  ],
   "properties": {
-    "schema_version": { "const": 1 },
-    "skill": { "type": "string" },
+    "schema_version": {
+      "const": 1
+    },
+    "skill": {
+      "type": "string"
+    },
     "cases": {
       "type": "array",
       "minItems": 3,
       "items": {
         "type": "object",
-        "required": ["id", "kind", "prompt", "expect"],
+        "required": [
+          "id",
+          "kind",
+          "prompt",
+          "expect"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "kind": { "enum": ["typical", "edge", "ambiguous", "unsupported-claim", "untrusted-input"] },
-          "routing": { "type": "boolean", "description": "true = the router must select this skill for the prompt" },
-          "prompt": { "type": "string" },
-          "fixture": { "type": "string" },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "typical",
+              "edge",
+              "ambiguous",
+              "unsupported-claim",
+              "untrusted-input"
+            ]
+          },
+          "routing": {
+            "type": "boolean",
+            "description": "true = the router must select this skill for the prompt"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "fixture": {
+            "type": "string"
+          },
           "expect": {
             "type": "object",
-            "required": ["must"],
-            "properties": { "must": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "must_not": { "type": "array", "items": { "type": "string" } } }
+            "required": [
+              "must"
+            ],
+            "properties": {
+              "must": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "must_not": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "workspace": {
+            "type": "string",
+            "description": "Fixture under evals/workspaces/<id>/ (default per skill in evals/config.yaml)"
+          },
+          "requires": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Capabilities the case needs (e.g. web.search); skipped on live runs that do not allow them"
+          },
+          "environment": {
+            "type": "object",
+            "properties": {
+              "deny": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Capabilities denied in the host for this case"
+          },
+          "brain": {
+            "type": "boolean",
+            "description": "Initialise .agent-brain/ in the workspace before the run"
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "criterion": {
+                  "type": "string",
+                  "pattern": "^(must|must_not)\\[\\d+\\]$"
+                },
+                "type": {
+                  "enum": [
+                    "response_matches",
+                    "response_not_matches",
+                    "tool_called",
+                    "tool_not_called",
+                    "command_ran",
+                    "command_not_ran",
+                    "file_changed",
+                    "file_unchanged",
+                    "no_file_changes",
+                    "skill_loaded",
+                    "brain_proposal_created",
+                    "brain_fact_matches",
+                    "tool_order",
+                    "file_matches",
+                    "skill_created"
+                  ]
+                },
+                "partial": {
+                  "type": "boolean",
+                  "description": "Covers only part of the expectation: can fail it, never pass it alone"
+                },
+                "pattern": {
+                  "type": "string"
+                },
+                "flags": {
+                  "type": "string"
+                },
+                "tool": {
+                  "type": "string"
+                },
+                "input_matches": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "skill": {
+                  "type": "string"
+                },
+                "before": {
+                  "type": "object"
+                },
+                "after": {
+                  "type": "object"
+                },
+                "require_manifest": {
+                  "type": "boolean"
+                },
+                "min_eval_kinds": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         }
       }

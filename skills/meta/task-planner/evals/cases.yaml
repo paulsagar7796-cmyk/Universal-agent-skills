@@ -36,6 +36,15 @@ cases:
     expect:
       must:
         - Does the fix directly without a formal plan
+    checks:
+      - criterion: "must[0]"
+        type: "file_matches"
+        pattern: "^# Shop App"
+        path: "^README\\.md$"
+        flags: "m"
+      - criterion: "must[0]"
+        type: "file_unchanged"
+        path: "(^|/)(PLAN|plans/)"
   - id: tp-unsupported
     kind: unsupported-claim
     routing: false

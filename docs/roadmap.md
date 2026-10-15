@@ -14,6 +14,15 @@ Status as of 2026-10-15.
   host-verified on 2.1.300 except PreCompact.
 - Capability registry, consent store, broker with state machine and action authorization.
 
+## Implemented (phase 2, unreleased)
+
+- Consent hardening: human-only grants/approvals (terminal challenge), hash-chained policy log with fail-closed
+  integrity, observations ≠ authorization, allowlist mode, PreToolUse guard, `--harden` OS sandbox option — host-verified
+  on Claude Code 2.1.300 (macOS). Threat model and adversarial test suite.
+- Behavioural evaluation harness with mock and Claude Code providers, structured checks on 48/181 expectations,
+  evidence-validated judge, human grading, reports, re-runs and an advisory release gate (proposed policy).
+- Setup integrity: controller checksums (trust on first use), journaled apply, PATH fallback, richer doctor/repair.
+
 ## Partially implemented
 
 - **Automatic memory updates:** hooks checkpoint mechanical state (git) automatically; durable facts and decisions are
@@ -27,15 +36,17 @@ Status as of 2026-10-15.
 
 ## Next (priority order)
 
-1. **Behaviour-eval harness** — run the 102 cases against Claude Code and Codex in fixture repos; publish per-case
-   results; promote skills that pass to `reviewed`.
-2. **Codex adapter** — `hooks.json` (SessionStart/UserPromptSubmit/Stop/PreToolUse) with hash-trust notes; verify on a
-   real Codex version.
-3. **Initialisation benchmark** — six public fixture repositories with human-labelled expected facts; measure precision
-   and unsupported claims.
-4. Read-only MCP server (`brain_context`, `brain_search`, `brain_get_fact`, `capability_status`) for MCP-capable hosts.
-5. Antigravity / Gemini CLI adapters (different payload shapes).
-6. `brain plan` command and plan ↔ status integration.
+1. **First live behavioural run** on Claude Code (owner-approved budget), then human/judge grading of the 133
+   prose expectations; fix skills and checks from the failures; decide on the proposed release policy.
+2. **Fixture fidelity** — add workspaces for the ~20 cases whose fixture is described only in prose (see
+   docs/evaluation-guide.md), and more structured checks where they are faithful.
+3. **Stronger approval boundary** — a separately privileged approval component or OS-keychain-backed signing key the
+   agent cannot read (threat-model U1/U4); Linux bubblewrap verification of `--harden`.
+4. **Codex adapter** — `hooks.json` with hash-trust notes, plus a Codex eval provider; verify on a real Codex version.
+5. **Initialisation benchmark** — six public fixture repositories with human-labelled expected facts.
+6. Read-only MCP server (`brain_context`, `brain_search`, `brain_get_fact`, `capability_status`) for MCP-capable hosts.
+7. Antigravity / Gemini CLI adapters (different payload shapes).
+8. `brain plan` command and plan ↔ status integration.
 
 ## Later
 

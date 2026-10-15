@@ -31,7 +31,9 @@
 | E. Adapters | `src/hooks.js`, `src/setup.js` | Claude Code hooks; `AGENTS.md` block as fallback |
 | F. Quality | `src/validate.js`, `scripts/*`, `tests/` | Validator, scanners, routing evals, tests, CI |
 | G. Bootstrap | `src/setup.js` | Plan → diff → consent → backup → apply → smoke test → install record |
-| H. Broker | `src/broker.js`, `integrations/capabilities.yaml` | Capability state machine, consent grants, action authorization |
+| H. Broker | `src/broker.js`, `src/policy.js`, `src/human.js`, `integrations/capabilities.yaml` | Hash-chained consent log, human-only grants (terminal challenge), observations vs. consent, action authorization, enforcement modes |
+| I. Guard | `src/guard.js` | PreToolUse checks against self-approval, terminal emulation and edits to protected paths |
+| J. Evaluation | `src/eval/*`, `scripts/eval.js`, `evals/` | Behavioural harness: cases, workspaces, providers, checks, grading, reports, release gate |
 
 ## Key decisions
 

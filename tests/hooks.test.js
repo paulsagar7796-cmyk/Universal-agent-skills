@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { makeRepo, NODE_FIXTURE, BRAIN_JS, brain, hook, read, runHookCommand, tmpDir } from './helpers.js';
+import { brainWithTty, ptyAvailable } from './pty.js';
 
 function project() {
   const dir = makeRepo(NODE_FIXTURE);
@@ -49,7 +50,7 @@ test('UserPromptSubmit routes to skills and logs only a hash and length of the p
   assert.equal(r.code, 0);
   const ctx = JSON.parse(r.out).hookSpecificOutput.additionalContext;
   assert.match(ctx, /web-research/);
-  assert.match(ctx, /web\.search: ask-connect/);
+  assert.match(ctx, /web\.search: ask-consent/);
   const log = read(path.join(dir, '.agent-brain', 'local', 'events.jsonl'));
   assert.ok(!log.includes('BLUEFALCON'), 'prompt text must not be stored');
   assert.match(log, /"prompt_chars":\d+/);
@@ -79,17 +80,24 @@ test('Stop checkpoints are deduplicated for identical git state and never block'
   assert.ok(cp.git.changed.some((c) => c.path === 'new.txt'));
 });
 
-test('PreToolUse blocks (exit 2) only capabilities the user explicitly denied', () => {
+test('PreToolUse blocks (exit 2) only capabilities the user explicitly denied; the agent cannot lift the block', async () => {
   const dir = project();
   assert.equal(hook('pre-tool-use', base(dir, { tool_name: 'WebSearch', tool_input: { query: 'x' } })).code, 0);
   assert.equal(brain(['consent', 'deny', 'web.search'], { cwd: dir }).code, 0);
   const blocked = hook('pre-tool-use', base(dir, { tool_name: 'WebSearch', tool_input: { query: 'x' } }));
   assert.equal(blocked.code, 2);
-  assert.match(blocked.err, /user denied capability "web\.search"/);
+  assert.match(blocked.err, /capability "web\.search" is blocked .*denied or revoked by the user/);
   assert.equal(hook('pre-tool-use', base(dir, { tool_name: 'WebFetch' })).code, 0, 'other capabilities unaffected');
   assert.equal(hook('pre-tool-use', base(dir, { tool_name: 'Bash' })).code, 0);
-  assert.equal(brain(['consent', 'grant', 'web.search'], { cwd: dir }).code, 0);
-  assert.equal(hook('pre-tool-use', base(dir, { tool_name: 'WebSearch' })).code, 0, 're-granting lifts the block');
+  const selfGrant = brain(['consent', 'grant', 'web.search'], { cwd: dir, env: { CLAUDECODE: '1' } });
+  assert.equal(selfGrant.code, 4, 'agent-session grant is refused');
+  assert.equal(brain(['consent', 'grant', 'web.search'], { cwd: dir }).code, 4, 'grant without a controlling terminal is refused');
+  assert.equal(hook('pre-tool-use', base(dir, { tool_name: 'WebSearch' })).code, 2, 'still blocked');
+  if (ptyAvailable) {
+    const human = await brainWithTty(['consent', 'grant', 'web.search'], { cwd: dir });
+    assert.equal(human.code, 0, human.output);
+    assert.equal(hook('pre-tool-use', base(dir, { tool_name: 'WebSearch' })).code, 0, "the person's own approval lifts the block");
+  }
 });
 
 test('corrupt brain files degrade visibly instead of failing the session', () => {

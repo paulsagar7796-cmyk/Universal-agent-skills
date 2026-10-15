@@ -124,6 +124,7 @@ export function validateSkill(skill, { registry = loadCapabilityRegistry(), allN
         }
         if (!def.access_levels.includes(c.access)) E(`capability ${c.id} access "${c.access}" not allowed (registry: ${def.access_levels.join('/')})`);
         if (!c.purpose) E(`capability ${c.id} needs a purpose`);
+        for (const k of Object.keys(c)) if (!['id', 'access', 'purpose', 'fallback'].includes(k)) E(`capability ${c.id} has unsupported field "${k}" (a manifest can declare needs, never grant itself consent)`);
         if (!c.fallback) (imp === 'optional' ? E : W)(`capability ${c.id} has no fallback`);
       }
     }

@@ -34,6 +34,8 @@
     "scan": "node scripts/scan-skills.js",
     "scan:secrets": "node scripts/scan-secrets.js",
     "eval:routing": "node scripts/run-evals.js",
-    "check": "npm run validate && npm run catalog:check && npm run scan && npm run scan:secrets && npm run eval:routing && npm test"
+    "eval:list": "node scripts/eval.js list",
+    "eval:mock": "node scripts/eval.js run --provider mock --judge mock --concurrency 4",
+    "check": "npm run validate && npm run catalog:check && npm run scan && npm run scan:secrets && npm run eval:routing && npm run eval:list -- --json > /dev/null && npm test"
   }
 }

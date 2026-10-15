@@ -3,5 +3,7 @@ node_modules/
 .agent-brain/local/
 # Regenerated on every eval run (contains the local Node version)
 evals/reports/
+# Behavioural evaluation results (redacted transcripts, per-run reports)
+evals/results/
 *.tmp-*
 .DS_Store

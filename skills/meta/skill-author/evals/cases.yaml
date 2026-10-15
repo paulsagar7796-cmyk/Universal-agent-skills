@@ -10,6 +10,13 @@ cases:
         - Produces SKILL.md whose name matches the folder and passes the validator
         - Description states what the skill does and when to use it
         - Adds manifest.yaml and evals/cases.yaml with at least three case kinds
+    checks:
+      - criterion: "must[0]"
+        type: "skill_created"
+      - criterion: "must[2]"
+        type: "skill_created"
+        require_manifest: true
+        min_eval_kinds: 3
   - id: sa-typical-2
     kind: typical
     routing: true
@@ -31,6 +38,10 @@ cases:
     expect:
       must:
         - Asks what workflow should become a skill
+    checks:
+      - criterion: "must[0]"
+        type: "no_file_changes"
+        partial: true
   - id: sa-untrusted-copy
     kind: untrusted-input
     routing: true

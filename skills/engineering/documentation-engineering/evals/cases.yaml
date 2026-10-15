@@ -9,6 +9,15 @@ cases:
       must:
         - Checks the lockfile and scripts before rewriting commands
         - Lists drift found between docs and code
+    checks:
+      - criterion: "must[0]"
+        type: "tool_called"
+        tool: "^(Read|Bash|Grep|Glob)$"
+        input_matches: "pnpm-lock|packageManager"
+      - criterion: "must[0]"
+        type: "tool_called"
+        tool: "^(Read|Bash|Grep)$"
+        input_matches: "package\\.json"
   - id: de-typical-2
     kind: typical
     routing: true

@@ -26,6 +26,11 @@ skills (implicit invocation by description) is host behaviour and was not measur
 | `session_start_hook` (context injection) | **verified** — `claude -p` answered a fact present only in the brain, tools disabled | documented (SessionStart in `hooks.json`); adapter not implemented | documented (different payload/`injectSteps`); adapter not implemented | not tested | unsupported |
 | `user_prompt_hook` (skill routing note) | **verified** — route event recorded from a real session | documented; no adapter | not tested | not tested | unsupported |
 | `pre_tool_hook` (deny enforcement) | **verified** — real WebSearch call blocked after `consent deny web.search` | documented; no adapter | documented; no adapter | not tested | unsupported |
+| `pre_tool_hook` (self-approval / policy-edit guard) | **verified** 2026-10-15 — `brain consent grant` via Bash blocked by the guard | no adapter | no adapter | not tested | unsupported |
+| OS sandbox for agent shell (`--harden`) | **verified** 2026-10-15 — obfuscated append to the policy file failed with `operation not permitted` (macOS Seatbelt); Linux bubblewrap not tested | n/a | n/a | n/a | n/a |
+| Permission deny rules for file tools (`--harden`) | **verified** 2026-10-15 — Write to `.agent-brain/config.yaml` refused by settings | n/a | n/a | n/a | n/a |
+| Human approval challenge (no controlling TTY in agent Bash) | **verified** 2026-10-15 — `/dev/tty` → ENXIO and `CLAUDECODE` set inside the Bash tool | not tested | not tested | not tested | not tested |
+| Behavioural eval provider | **implemented**; stream-json parser verified on a real 2.1.300 run; full 102-case live run **not yet executed** | interface documented; not implemented | not implemented | not implemented | not implemented |
 | `stop_hook` (checkpoint) | **verified** — checkpoint recorded from a real session | documented; no adapter | documented; no adapter | not tested | unsupported |
 | `pre_compact_hook` | tested (simulated) — host compaction not triggered in tests | documented; no adapter | not tested | not tested | unsupported |
 | `session_end_hook` | **verified** — checkpoint (`reason: other`) recorded in `-p` mode | documented; no adapter | not tested | not tested | unsupported |
@@ -39,7 +44,9 @@ Notes for Claude Code:
   treat the folder as trusted (Claude Code docs, "Workspace trust"). The real-host verification used `-p`.
 - Hooks are written to `.claude/settings.local.json` (project) or `~/.claude/settings.json` (`--global`).
 - `SessionEnd` hooks share a short default budget (1.5 s); setup sets `timeout: 5` for ours. Measured hook latency on
-  the development machine: 106–207 ms.
+  the development machine: 106–207 ms. With enforcement on, the guard hook also runs for every Bash/Edit/Write call.
+- The capability hook uses `onFailure: "block"` (fail closed); the guard hook does not (a broken controller must not
+  block every shell command). Settings containing `onFailure` were accepted by 2.1.300 (hooks fired).
 
 ## Manual fallback (all agents)
 

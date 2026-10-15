@@ -12,3 +12,6 @@ retention:
 routing:
   max_skills: 3
   min_score: 3
+consent:
+  enforcement: denylist   # denylist: block tools for capabilities the user denied. allowlist: block every
+                          # registered capability the user has not approved (stricter). Enforced only by host adapters.

@@ -39,6 +39,14 @@ export class SecretDetectedError extends Error {
   }
 }
 
+/** Replace anything matching a credential pattern with [REDACTED] (used for text copied from repository files). */
+export function redactSecrets(text) {
+  if (typeof text !== 'string') return text;
+  let out = text;
+  for (const r of RULES) out = out.replace(new RegExp(r.re.source, r.re.flags.includes('g') ? r.re.flags : r.re.flags + 'g'), '[REDACTED]');
+  return out;
+}
+
 export function assertNoSecrets(text, where) {
   const hits = findSecrets(text);
   if (hits.length) throw new SecretDetectedError(where, hits);

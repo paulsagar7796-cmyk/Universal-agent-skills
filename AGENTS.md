@@ -22,6 +22,7 @@ node scripts/build-catalog.js --check     # after changing any skill: run withou
 node scripts/scan-skills.js
 node scripts/scan-secrets.js
 node scripts/run-evals.js
+node scripts/eval.js list              # behavioural cases parse; no execution
 node --test tests/*.test.js
 ```
 
@@ -29,8 +30,11 @@ node --test tests/*.test.js
 
 - Do not add runtime dependencies or npm lifecycle scripts (`preinstall`, `postinstall`, `prepare`, …).
 - Nothing may execute on clone/install. Only `brain setup` may change agent configuration, and only after consent.
-- Hooks must exit 0 except PreToolUse enforcement of an explicit user denial (exit 2). Keep them bounded and silent
-  in folders without `.agent-brain/`.
+- Hooks must exit 0 except PreToolUse blocking (exit 2) of denied/unapproved capabilities, policy-integrity failures and
+  the self-approval/policy-edit guard. Keep them bounded and silent in folders without `.agent-brain/`.
+- Never add a code path that lets an agent approve consent or memory proposals non-interactively; approvals require
+  `confirmHuman()` (src/human.js). Tests that need approvals use `tests/pty.js` or an injected simulated terminal.
+- Tests must not touch the real HOME (`tests/helpers.js` sets a temporary one) and must not call live models.
 - Never store prompts, assistant messages, file contents or credentials in the trace, index or brain.
 - Do not claim compatibility with an agent you have not tested; update `docs/compatibility.md` with date, version and
   evidence when you do test.

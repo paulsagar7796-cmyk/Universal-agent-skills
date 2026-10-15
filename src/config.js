@@ -8,6 +8,7 @@ export const DEFAULT_CONFIG = Object.freeze({
   memory: { auto_accept_low_risk: false },
   retention: { events_days: 30, max_event_lines: 5000 },
   routing: { max_skills: 3, min_score: 3 },
+  consent: { enforcement: 'denylist' },
 });
 
 function merge(base, over) {
@@ -47,6 +48,10 @@ export function loadConfig(brainDir) {
   if (!num(cfg.retention, 'max_event_lines', 100, 1_000_000)) cfg.retention.max_event_lines = DEFAULT_CONFIG.retention.max_event_lines;
   if (!num(cfg.routing, 'max_skills', 0, 10)) cfg.routing.max_skills = DEFAULT_CONFIG.routing.max_skills;
   if (!num(cfg.routing, 'min_score', 1, 100)) cfg.routing.min_score = DEFAULT_CONFIG.routing.min_score;
+  if (!['denylist', 'allowlist'].includes(cfg.consent?.enforcement)) {
+    warnings.push(`config consent.enforcement must be denylist or allowlist; using denylist`);
+    cfg.consent = { ...(cfg.consent ?? {}), enforcement: 'denylist' };
+  }
   if (typeof cfg.memory.auto_accept_low_risk !== 'boolean') {
     warnings.push('config memory.auto_accept_low_risk must be true/false; using false');
     cfg.memory.auto_accept_low_risk = false;

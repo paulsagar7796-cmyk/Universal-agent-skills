@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeRepo, NODE_FIXTURE, brain, read, runHookCommand, tmpDir } from './helpers.js';
+import { brainWithTty } from './pty.js';
 
 function configuredCommands(settingsFile) {
   const s = JSON.parse(read(settingsFile));
@@ -13,7 +14,7 @@ function configuredCommands(settingsFile) {
   return cmd;
 }
 
-test('full lifecycle across two isolated projects', () => {
+test('full lifecycle across two isolated projects', async () => {
   const home = tmpDir('asb-e2e-home-');
   const env = { HOME: home };
   const a = makeRepo(NODE_FIXTURE);
@@ -38,13 +39,13 @@ test('full lifecycle across two isolated projects', () => {
   const ask = runHookCommand(cmd.UserPromptSubmit, { ...sess, hook_event_name: 'UserPromptSubmit', prompt: 'Research the latest competitors for this app and summarise their pricing for ZEPHYRQUILL' }, { env });
   const askCtx = JSON.parse(ask.out).hookSpecificOutput.additionalContext;
   assert.match(askCtx, /web-research/);
-  assert.match(askCtx, /web\.search: ask-connect/);
+  assert.match(askCtx, /web\.search: ask-consent/);
 
   // 5. User declines search → recorded; next request gets the fallback instead of another ask; tool is blocked.
   assert.equal(brain(['consent', 'deny', 'web.search'], { cwd: a, env }).code, 0);
   const again = JSON.parse(runHookCommand(cmd.UserPromptSubmit, { ...sess, prompt: 'Research the latest competitors for this app and summarise their pricing for ZEPHYRQUILL' }, { env }).out).hookSpecificOutput.additionalContext;
   assert.match(again, /web\.search: fallback/);
-  assert.doesNotMatch(again, /web\.search: ask-connect/);
+  assert.doesNotMatch(again, /web\.search: ask-consent/);
   const blocked = runHookCommand(cmd.PreToolUse, { ...sess, hook_event_name: 'PreToolUse', tool_name: 'WebSearch', tool_input: { query: 'competitors' } }, { env });
   assert.equal(blocked.code, 2);
 
@@ -55,7 +56,9 @@ test('full lifecycle across two isolated projects', () => {
   const rem = brain(['remember', '--claim', 'The app entry point is src/index.js.', '--key', 'entry.app', '--evidence', 'file:src/index.js'], { cwd: a, env });
   assert.equal(rem.code, 0, rem.err);
   const pid = rem.out.match(/P-\d{8}-[0-9a-f]+/)[0];
-  assert.equal(brain(['approve', pid], { cwd: a, env }).code, 0);
+  assert.equal(brain(['approve', pid], { cwd: a, env: { ...env, CLAUDECODE: '1' } }).code, 4, 'the agent cannot approve its own proposal');
+  const approved = await brainWithTty(['approve', pid], { cwd: a, env });
+  assert.equal(approved.code, 0, approved.output);
   assert.equal(brain(['handoff', '--task', 'Saved addresses endpoint', '--check', 'npm test=not-run: deps not installed', '--next', 'install deps and run tests'], { cwd: a, env }).code, 0);
 
   // 7. Checkpoints at Stop / PreCompact / SessionEnd; the next session sees the handoff.

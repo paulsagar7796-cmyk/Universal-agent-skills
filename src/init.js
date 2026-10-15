@@ -6,6 +6,7 @@ import { parse } from './yaml.js';
 import { fileEvidence, nextFactId } from './facts.js';
 import { replaceGenerated } from './store.js';
 import { git, today, truncate, writeFileAtomic } from './util.js';
+import { redactSecrets } from './secrets.js';
 
 const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', 'out', 'target', 'vendor', '.venv', 'venv', '__pycache__', '.next', '.nuxt', '.cache', 'coverage', '.agent-brain', '.idea', '.vscode', '.dart_tool', 'Pods', '.gradle', '.terraform']);
 const SENSITIVE = /(^\.env($|\.)|\.pem$|\.key$|^id_[a-z0-9]+$|credentials|secret|\.npmrc$|\.pypirc$|\.netrc$|\.p12$|\.keystore$)/i;
@@ -99,7 +100,7 @@ export function scanProject(project, { now = new Date() } = {}) {
   const found = [];
   const notes = { commandsNotRun: [], unknowns: [], types: new Set(), readme: null, license: null, layout: null };
   const ev = (rel, locator) => fileEvidence(root, rel, locator, date);
-  const add = (key, category, claim, rel, locator, extra = {}) => found.push({ key, category, claim, status: 'observed', evidence: [ev(rel, locator)], ...extra });
+  const add = (key, category, claim, rel, locator, extra = {}) => found.push({ key, category, claim: redactSecrets(claim), status: 'observed', evidence: [ev(rel, locator)], ...extra });
 
   const { dirs, files } = topLevel(root);
   const has = (f) => files.includes(f);
@@ -120,7 +121,7 @@ export function scanProject(project, { now = new Date() } = {}) {
       .split(/\n\s*\n/)
       .map((p) => p.trim())
       .find((p) => p && !p.startsWith('[!') && !p.startsWith('<') && !p.startsWith('![') && !p.startsWith('```') && p.length > 30);
-    notes.readme = { file: readmeName, title: title ?? null, summary: para ? truncate(para.replace(/\s+/g, ' '), 400) : null };
+    notes.readme = { file: readmeName, title: title ? redactSecrets(title) : null, summary: para ? redactSecrets(truncate(para.replace(/\s+/g, ' '), 400)) : null };
     add('docs.readme', 'documentation', `A README exists (${readmeName})${title ? ` titled "${truncate(title, 80)}"` : ''}.`, readmeName, title ? 'first heading' : undefined);
   } else notes.unknowns.push({ key: 'docs.readme', question: 'There is no README; what is this project for and how is it run?' });
 

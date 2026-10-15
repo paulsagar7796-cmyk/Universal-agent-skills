@@ -37,16 +37,18 @@ Do **not** store: secrets, tokens, personal data, raw chat transcripts, large lo
 4. **Propose**, don't rewrite: `brain remember --claim "…" --status observed --key … --evidence file:path#locator`.
    Decisions: `brain decide --title … --decision … --alternative … --consequences …`.
 5. **Get approval** for anything with risk `review` (conflicts, decisions, product/security claims): show the
-   proposal (`brain show P-…`) to the user and run `brain approve` only after they agree. Low-risk proposals may be
-   auto-applied if the project enabled `memory.auto_accept_low_risk`.
+   proposal (`brain show P-…`) and ask the user to approve it **themselves, in their own terminal**
+   (`brain approve P-…` asks them to type a confirmation code). You cannot approve on their behalf, and you must never
+   say a proposal was approved unless `brain status` shows it applied. Low-risk proposals may be auto-applied if the
+   user enabled `memory.auto_accept_low_risk`.
 6. **Confirm** with `brain status` that the change landed and nothing else was disturbed.
 
 ## Workflow: curating (audit)
 
 1. Run `brain audit`. For each **changed/missing** fact, open the evidence file and decide: still true → re-verify;
    no longer true → `brain deprecate FACT-… --reason "…"` and propose the corrected fact.
-2. **Disputed** facts: present both sides with their evidence and ask the owner. Approve the winner with
-   `--supersede`; never pick silently.
+2. **Disputed** facts: present both sides with their evidence and ask the owner. They approve the winner with
+   `brain approve P-… --supersede` in their terminal; never pick silently.
 3. Open questions that have been answered → record the answer as a fact with the stakeholder as evidence (`user:` note).
 4. Keep `status.md` to what is true now; move history into handoffs.
 

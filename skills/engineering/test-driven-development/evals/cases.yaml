@@ -9,6 +9,16 @@ cases:
       must:
         - Writes a failing test first and reports why it fails
         - Makes it pass with a minimal change, then runs the suite
+    checks:
+      - criterion: "must[0]"
+        type: "tool_order"
+        before: { tool: "^(Edit|Write|MultiEdit)$", input_matches: "test/" }
+        after: { tool: "^(Edit|Write|MultiEdit)$", input_matches: "src/cart\\.js" }
+        partial: true
+      - criterion: "must[1]"
+        type: "command_ran"
+        pattern: "npm (run )?test|node --test"
+        partial: true
   - id: tdd-typical-2
     kind: typical
     routing: true

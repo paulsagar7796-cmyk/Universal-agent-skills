@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills-brain.invalid/schemas/consent-policy.schema.json",
+  "title": "Consent policy log (.agent-brain/local/policy/consent.json)",
+  "description": "Append-only, hash-chained consent decisions. Structure only: chain verification (prev/hash, head files) is done by src/policy.js (verifyPolicy).",
+  "type": "object",
+  "required": ["schema_version", "entries"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "note": { "type": "string" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["seq", "ts", "target", "decision", "prev", "hash"],
+        "properties": {
+          "seq": { "type": "integer", "minimum": 1 },
+          "ts": { "type": "string" },
+          "target": { "type": "string" },
+          "decision": { "enum": ["granted", "denied", "revoked", "consumed"] },
+          "access": { "enum": ["read", "write", "privileged"] },
+          "scope": { "enum": ["once", "session", "project"] },
+          "session": { "type": ["string", "null"] },
+          "expires_at": { "type": ["string", "null"] },
+          "note": { "type": ["string", "null"] },
+          "request_id": { "type": ["string", "null"] },
+          "grant_id": { "type": "string" },
+          "actor": { "type": "string" },
+          "via": { "type": "string" },
+          "prev": { "type": "string" },
+          "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        },
+        "allOf": [{ "if": { "properties": { "decision": { "const": "granted" } } }, "then": { "required": ["actor", "via"], "properties": { "actor": { "const": "human" }, "via": { "const": "tty-challenge" } } } }]
+      }
+    }
+  }
+}

@@ -21,6 +21,8 @@ This workflow needs a web search tool (`web.search`, read-only) and benefits fro
 - If not, tell the user what is missing and why, and offer: (a) connecting a search tool through your agent's own
   supported flow, or (b) an offline answer clearly labelled *not current*, built only from material the user provides
   and general knowledge, with a list of what to verify. Never fabricate search results or URLs.
+- To record that the user wants search, file a request (`brain consent request web.search --skill web-research
+  --reason "…"`); only the user can approve it, in their own terminal (`brain consent approve <id>`).
 - If the user declines, respect it for this project (`brain consent deny web.search`) and do not ask again unless they
   raise it.
 

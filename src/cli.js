@@ -16,13 +16,15 @@ import { writeHandoff } from './handoff.js';
 import { audit } from './audit.js';
 import { loadRuntimeCatalog, loadCapabilityRegistry, CATALOG_FILE, REPO_ROOT, findSkillDirs } from './catalog.js';
 import { route } from './router.js';
-import { authorizeAction, CAP_STATES, evaluateSkill, loadState, recordCapability, recordConsent } from './broker.js';
-import { applySetup, applyUninstall, detectAgents, planSetup, planUninstall, renderPlan, renderUninstall, smokeTest, OWNER_MARK } from './setup.js';
+import { activeDecision, authorizeAction, blockedCapabilities, CAP_STATES, consumeGrant, evaluateCapability, evaluateSkill, loadState, recordCapability, recordHumanGrant, recordRestriction, rejectRequest, requestConsent } from './broker.js';
+import { confirmHuman, HumanApprovalRequired } from './human.js';
+import { applySetup, applyUninstall, detectAgents, mergeClaudeSettings, planSetup, planUninstall, renderPlan, renderUninstall, smokeTest, verifyControllerFiles, OWNER_MARK } from './setup.js';
+import { spawnSync } from 'node:child_process';
 import { cliInvocation, runHookProcess } from './hooks.js';
 import { exists, readJsonIfExists, truncate } from './util.js';
 
 const REPEATABLE = new Set(['evidence', 'done', 'next', 'blocker', 'check', 'assumption', 'alternative', 'agent', 'access']);
-const BOOLEAN = new Set(['json', 'full', 'verbose', 'dry-run', 'yes', 'global', 'no-enforce', 'no-diff', 'confirm', 'supersede', 'dispute', 'always-confirm', 'help', 'all']);
+const BOOLEAN = new Set(['json', 'full', 'verbose', 'dry-run', 'yes', 'global', 'no-enforce', 'no-diff', 'confirm', 'supersede', 'dispute', 'always-confirm', 'help', 'all', 'harden']);
 
 export function parseArgs(argv) {
   const pos = [];
@@ -59,7 +61,8 @@ class UsageError extends Error {}
 const HELP = `brain — local project brain + skill router for coding agents (agent-skills-brain)
 
 Setup (explicit, consent-gated, reversible):
-  brain setup [--global] [--agent claude-code,agents-md] [--no-enforce] [--dry-run] [--yes]
+  brain setup [--global] [--agent claude-code,agents-md] [--no-enforce] [--harden] [--dry-run] [--yes]
+                                   --harden: opt-in Claude Code OS sandbox protecting consent policy (project scope)
   brain repair                     re-apply the recorded setup (e.g. after moving node or this checkout)
   brain uninstall [--global] [--dry-run] [--yes]
   brain doctor                     diagnose controller, index, adapters, hooks
@@ -74,7 +77,8 @@ Memory:
   brain remember --claim "…" [--status observed|verified|assumption|unknown] --evidence file:<path>[#loc]
                  [--evidence cmd:<exit>:<command>] [--evidence url:<https://…>] [--evidence user:<note>]
                  [--key k] [--category c] [--question q] [--test-by how] [--supersedes FACT-…]
-  brain proposals | approve <P-…> [--supersede|--dispute] | reject <P-…> [--reason r]
+  brain proposals | reject <P-…> [--reason r]
+  brain approve <P-…> [--supersede|--dispute]        HUMAN ONLY: run in your own terminal (typed confirmation code)
   brain decide --title t --decision d [--context c] [--alternative a]… [--consequences c] [--status proposed|accepted]
   brain verify [FACT-…] [--confirm --evidence …]     report freshness / record re-verification
   brain deprecate <FACT-…> --reason r
@@ -86,11 +90,15 @@ Memory:
 Skills & capabilities:
   brain route "<request>"          show which skills the router would suggest
   brain capabilities [check <skill>] | capabilities record <capability> <state> --access read --evidence "…"
-  brain consent grant|deny|revoke <capability|action:NAME> [--access read|write|privileged] [--scope once|session|project] [--expires ISO]
+  brain consent status | explain <capability|action:NAME|skill>          read-only
+  brain consent request <capability|action:NAME> [--access read|write|privileged] [--scope once|session|project]
+                [--expires ISO] [--skill s] [--reason r]                 agent-usable; changes nothing
+  brain consent deny|revoke <target> | reject <request-id>               agent-usable; can only reduce privilege
+  brain consent approve <request-id> | grant <target> [--access …]       HUMAN ONLY: run in your own terminal
   brain authorize <action> [--always-confirm]   may this high-impact action run now?
   brain connect <capability>       official setup guidance (never installs anything)
 
-Global: --project <dir> (default: cwd)   Exit codes: 0 ok, 1 error, 2 usage, 3 consent required`;
+Global: --project <dir> (default: cwd)   Exit codes: 0 ok, 1 error, 2 usage, 3 consent required, 4 human approval required`;
 
 function out(s = '') {
   process.stdout.write(s + '\n');
@@ -169,7 +177,7 @@ async function cmdSetup(flags) {
     out('No adapters selected; nothing to do. File-only use needs no setup: copy templates/project-brain/ to .agent-brain/ or run `brain init`.');
     return 0;
   }
-  const plan = planSetup({ cwd: flags.project ?? process.cwd(), scope: flags.global ? 'global' : 'project', agents, enforceDenials: enforce, home });
+  const plan = planSetup({ cwd: flags.project ?? process.cwd(), scope: flags.global ? 'global' : 'project', agents, enforceDenials: enforce, harden: Boolean(flags.harden), home });
   out(renderPlan(plan, { diffs: !flags['no-diff'] }));
   if (flags['dry-run']) {
     out('\nDry run: no changes were made.');
@@ -217,7 +225,7 @@ async function cmdRepair(flags) {
     out('No install record found; run `brain setup` first.');
     return 1;
   }
-  return cmdSetup({ ...flags, global: m.scope === 'global', agent: m.agents, 'no-enforce': !m.enforce_denials });
+  return cmdSetup({ ...flags, global: m.scope === 'global', agent: m.agents, 'no-enforce': !m.enforce_denials, harden: flags.harden ?? m.harden ?? false });
 }
 
 async function cmdUninstall(flags) {
@@ -370,7 +378,7 @@ function cmdRemember(flags) {
   logEvent(store, 'memory', { action: 'propose', proposal: proposal.id, risk: proposal.risk, applied: applied?.id ?? null });
   out(`Proposed ${proposal.id} (risk: ${proposal.risk})${proposal.reasons.length ? ` — ${proposal.reasons.join('; ')}` : ''}`);
   if (applied) out(`Auto-accepted per config (memory.auto_accept_low_risk): recorded as ${applied.id}.`);
-  else out(`Review with the user, then: brain approve ${proposal.id}${proposal.conflicts.length ? ' [--supersede | --dispute]' : ''}   (or brain reject ${proposal.id})`);
+  else out(`Pending. Show it to the user (brain show ${proposal.id}); only they can approve it, in their own terminal: brain approve ${proposal.id}${proposal.conflicts.length ? ' [--supersede | --dispute]' : ''}   (or anyone: brain reject ${proposal.id})`);
   return 0;
 }
 
@@ -394,9 +402,15 @@ function cmdProposals(flags) {
 function cmdApprove(flags, pos) {
   const { store } = ctx(flags);
   requireBrain(store);
-  if (!pos[0]) throw new UsageError('usage: brain approve <P-…> [--supersede|--dispute]');
+  if (!pos[0]) throw new UsageError('usage: brain approve <P-…> [--supersede|--dispute]   (must be run by a person in their own terminal)');
+  const p = getProposal(store, pos[0]);
+  if (!p) throw new Error(`no pending proposal ${pos[0]}`);
+  const lines = p.type === 'decision'
+    ? [`Decision: ${p.decision.title}`, `Status if approved: ${p.decision.status}`, `Decision text: ${truncate(p.decision.decision, 300)}`]
+    : [`Claim: ${truncate(p.fact?.claim ?? '?', 300)}`, `Status: ${p.fact?.status}`, `Evidence: ${(p.fact?.evidence ?? []).map((e) => e.path ?? e.command ?? e.url ?? e.note).join('; ') || 'none'}`, `Risk: ${p.risk}${p.reasons?.length ? ` (${p.reasons.join('; ')})` : ''}`];
+  const approval = confirmHuman({ title: `Approve memory proposal ${p.id} (${p.type}) for ${store.root}?`, lines });
   const r = applyProposal(store, pos[0], { resolution: flags.supersede ? 'supersede' : flags.dispute ? 'dispute' : null });
-  logEvent(store, 'memory', { action: 'approve', proposal: pos[0], result: r.id });
+  logEvent(store, 'memory', { action: 'approve', proposal: pos[0], result: r.id, via: approval.via });
   out(`Applied ${pos[0]} → ${r.id}${r.file ? ` (${r.file})` : ''}${r.superseded?.length ? `; superseded ${r.superseded.join(', ')}` : ''}${r.disputed?.length ? `; marked disputed with ${r.disputed.join(', ')}` : ''}${r.answered?.length ? `; answered and closed ${r.answered.join(', ')}` : ''}`);
   return 0;
 }
@@ -416,7 +430,7 @@ function cmdDecide(flags) {
   requireBrain(store);
   const { proposal } = proposeDecision(store, { title: flags.title, decision: flags.decision, context: flags.context, alternatives: flags.alternative ?? [], consequences: flags.consequences, revisitWhen: flags['revisit-when'], status: flags.status, evidence: flags.evidence ?? [] });
   logEvent(store, 'memory', { action: 'propose-decision', proposal: proposal.id });
-  out(`Proposed decision ${proposal.id}. Decisions are always reviewed: show it to the user, then \`brain approve ${proposal.id}\`.`);
+  out(`Proposed decision ${proposal.id}. Decisions are always reviewed: show it to the user; only they can approve it, in their own terminal (\`brain approve ${proposal.id}\`).`);
   return 0;
 }
 
@@ -546,18 +560,124 @@ function cmdCapabilities(flags, pos) {
   return 0;
 }
 
+function describeTarget(registry, target) {
+  if (target.startsWith('action:')) return [`High-impact action: ${target.slice(7)}`];
+  const def = registry.capabilities?.[target];
+  const tools = Object.entries(def?.claude_code_tools ?? {}).map(([a, pats]) => `${a}: ${pats.join(', ')}`);
+  return [`Capability: ${target} — ${def?.description ?? 'unknown'}`, ...(tools.length ? [`Claude Code tools covered: ${tools.join('; ')}`] : []), 'Does NOT authorize high-impact actions (publish, push, merge, deploy, send, delete, spend); those need their own approval.'];
+}
+
+function consentStatus(store, registry, config) {
+  const st = loadState(store);
+  const caps = Object.keys(registry.capabilities ?? {});
+  const actions = [...new Set(st.grants.map((g) => g.target).filter((t) => t.startsWith('action:')))];
+  const rows = [...caps, ...actions].map((target) => {
+    const d = activeDecision(st, target);
+    return { target, decision: d?.decision ?? 'none', access: d?.decision === 'granted' ? d.access : null, scope: d?.scope ?? null, expires_at: d?.expires_at ?? null, actor: d?.actor ?? null, at: d?.at ?? null, observed: st.capabilities[target]?.state ?? null };
+  });
+  const blocked = blockedCapabilities(st, registry, { mode: config.consent.enforcement });
+  return { integrity: st.integrity, enforcement: config.consent.enforcement, blocked: blocked.ids, rows, pending: st.requests.filter((r) => r.status === 'pending'), requestsError: st.requestsError };
+}
+
 function cmdConsent(flags, pos) {
-  const { store } = ctx(flags);
+  const { store, config } = ctx(flags);
   requireBrain(store);
-  const [decision, target] = pos;
-  const map = { grant: 'granted', deny: 'denied', revoke: 'revoked' };
-  if (!map[decision] || !target) throw new UsageError('usage: brain consent grant|deny|revoke <capability|action:NAME> [--access read|write|privileged] [--scope once|session|project] [--session id] [--expires ISO] [--note text]');
+  const [sub, target] = pos;
   const registry = loadCapabilityRegistry();
-  if (!target.startsWith('action:') && !registry.capabilities?.[target]) throw new Error(`unknown capability "${target}"; for an action use action:<name> (e.g. action:publish)`);
-  const g = recordConsent(store, target, map[decision], { access: flags.access?.[0] ?? 'read', scope: flags.scope ?? 'project', session: flags.session ?? null, expiresAt: flags.expires ?? null, note: flags.note ?? null });
-  logEvent(store, 'consent', { target, decision: g.decision, access: g.access, scope: g.scope });
-  out(`Recorded: ${target} ${g.decision} (${g.access}, ${g.scope}${g.expires_at ? `, until ${g.expires_at}` : ''}).${g.decision === 'granted' && !target.startsWith('action:') ? ' This records consent only; connect the integration through your agent, then confirm it with `brain capabilities record`.' : ''}`);
-  return 0;
+  const knownTarget = (t) => {
+    if (!t) throw new UsageError(`usage: brain consent ${sub} <capability|action:NAME>`);
+    if (!t.startsWith('action:') && !registry.capabilities?.[t]) throw new Error(`unknown capability "${t}" (known: ${Object.keys(registry.capabilities ?? {}).join(', ')}); for an action use action:<name>`);
+    if (t.startsWith('action:') && !(registry.privileged_actions ?? []).includes(t.slice(7))) throw new Error(`unknown action "${t.slice(7)}" (registered: ${(registry.privileged_actions ?? []).join(', ')})`);
+    return t;
+  };
+  switch (sub) {
+    case undefined:
+    case 'status':
+    case 'verify': {
+      const s = consentStatus(store, registry, config);
+      if (flags.json) {
+        out(JSON.stringify(s, null, 2));
+        return s.integrity.ok ? 0 : 1;
+      }
+      out(`Policy integrity: ${s.integrity.ok ? 'ok' : `FAILED — ${s.integrity.error}. Protected capabilities and actions are blocked (fail closed).`}`);
+      out(`Enforcement mode: ${s.enforcement} (host-enforced only where an adapter is installed; see docs/security-model.md)`);
+      for (const r of s.rows) out(`- ${r.target}: ${r.decision}${r.access ? ` (${r.access}, ${r.scope}${r.expires_at ? `, until ${r.expires_at}` : ''})` : ''}${r.actor ? ` by ${r.actor}` : ''}${r.observed ? `; observed: ${r.observed}` : ''}${s.blocked.includes(r.target) ? ' [BLOCKED]' : ''}`);
+      if (s.pending.length) {
+        out('Pending requests (approve only in your own terminal):');
+        for (const r of s.pending) out(`  ${r.id}: ${r.target} (${r.access}, ${r.scope})${r.skill ? ` for ${r.skill}` : ''}${r.reason ? ` — ${r.reason}` : ''}`);
+      }
+      if (s.requestsError) out(`! ${s.requestsError}`);
+      return s.integrity.ok ? 0 : 1;
+    }
+    case 'explain': {
+      if (!target) throw new UsageError('usage: brain consent explain <capability|action:NAME|skill>');
+      const st = loadState(store);
+      const entry = loadRuntimeCatalog().find((c) => c.id === target);
+      if (entry) {
+        const ev = evaluateSkill({ id: target, capabilities: entry.capabilities ?? {}, approvals: entry.approvals ?? [] }, st, registry);
+        if (flags.json) out(JSON.stringify(ev, null, 2));
+        else for (const it of ev.items) out(`- ${it.capability} [${it.importance}, ${it.access}] consent=${it.consent} observed=${it.status} → ${it.decision}\n    ${it.message}`);
+        if (!ev.items.length) out(`${target} declares no external capabilities.`);
+        return 0;
+      }
+      if (target.startsWith('action:')) {
+        const r = authorizeAction(st, knownTarget(target).slice(7));
+        out(`${r.decision.toUpperCase()}: ${r.reason}`);
+        return 0;
+      }
+      const it = evaluateCapability({ id: knownTarget(target), access: flags.access?.[0] ?? 'read' }, 'required', st, registry);
+      out(`${it.decision}: ${it.message}`);
+      return 0;
+    }
+    case 'request': {
+      const r = requestConsent(store, knownTarget(target), { access: flags.access?.[0] ?? 'read', scope: flags.scope ?? 'project', reason: flags.reason ?? null, skill: flags.skill ?? null, session: flags.session ?? null, expiresAt: flags.expires ?? null });
+      logEvent(store, 'consent', { action: 'request', request: r.id, target: r.target, access: r.access, scope: r.scope });
+      out(`Requested ${r.id}: ${r.target} (${r.access}, ${r.scope}). This changes nothing yet.`);
+      out(`The user approves it themselves, in their own terminal (not through the agent): brain consent approve ${r.id}`);
+      return 0;
+    }
+    case 'reject': {
+      const r = rejectRequest(store, target);
+      logEvent(store, 'consent', { action: 'reject', request: r.id });
+      out(`Rejected request ${r.id}.`);
+      return 0;
+    }
+    case 'deny':
+    case 'revoke': {
+      const r = recordRestriction(store, knownTarget(target), sub === 'deny' ? 'denied' : 'revoked', { note: flags.note ?? null });
+      logEvent(store, 'consent', { action: sub, target: r.target, store: r.store });
+      out(`Recorded: ${r.target} ${r.decision} (takes effect immediately; recorded in ${r.store === 'policy' ? 'the policy log' : 'the restrictions list because the policy log is not writable here'}). Re-enabling it requires the user's own approval.`);
+      return 0;
+    }
+    case 'approve':
+    case 'grant': {
+      let req = null;
+      let t = target;
+      let access = flags.access?.[0] ?? 'read';
+      let scope = flags.scope ?? 'project';
+      let session = flags.session ?? null;
+      let expiresAt = flags.expires ?? null;
+      if (sub === 'approve') {
+        if (!target) throw new UsageError('usage: brain consent approve <request-id>   (run it yourself in your own terminal)');
+        req = loadState(store).requests.find((r) => r.id === target && r.status === 'pending');
+        if (!req) throw new Error(`no pending consent request ${target} (see brain consent status)`);
+        ({ target: t, access, scope } = req);
+        session = req.session ?? null;
+        expiresAt = req.expires_at ?? null;
+      }
+      knownTarget(t);
+      const approval = confirmHuman({
+        title: `Grant ${t} (${access}, ${scope}${expiresAt ? `, until ${expiresAt}` : ''}) for ${store.root}?`,
+        lines: [...describeTarget(registry, t), ...(req ? [`Requested ${req.at}${req.skill ? ` by skill ${req.skill}` : ''}${req.reason ? `: ${req.reason}` : ''}`] : [])],
+      });
+      const g = recordHumanGrant(store, t, { approval, access, scope, session, expiresAt, note: flags.note ?? null, requestId: req?.id ?? null });
+      logEvent(store, 'consent', { action: 'grant', target: t, access, scope, via: approval.via, request: req?.id ?? null });
+      out(`Granted ${t} (${access}, ${scope}) as ${g.id}. Connecting the integration (if needed) still happens through the agent host's own flow.`);
+      return 0;
+    }
+    default:
+      throw new UsageError('usage: brain consent [status|explain <x>|request <x>|reject <request-id>|deny <x>|revoke <x>|approve <request-id>|grant <x>]');
+  }
 }
 
 function cmdAuthorize(flags, pos) {
@@ -565,8 +685,9 @@ function cmdAuthorize(flags, pos) {
   requireBrain(store);
   if (!pos[0]) throw new UsageError('usage: brain authorize <action> [--always-confirm]');
   const r = authorizeAction(loadState(store), pos[0], { alwaysConfirm: Boolean(flags['always-confirm']) });
+  if (r.decision === 'allow' && r.grant?.scope === 'once') consumeGrant(store, r.grant.id);
   logEvent(store, 'authorize', { action: pos[0], decision: r.decision });
-  out(`${r.decision.toUpperCase()}: ${r.reason}`);
+  out(`${r.decision.toUpperCase()}: ${r.reason}${r.decision === 'allow' && r.grant?.scope === 'once' ? ' (one-time approval now used)' : ''}`);
   return r.decision === 'allow' ? 0 : r.decision === 'ask' ? 3 : 1;
 }
 
@@ -606,7 +727,7 @@ function cmdExplain(flags) {
     if (e.type === 'context') line = `context injected (${d.chars} chars, source ${d.source ?? '?'}) from ${(d.sources ?? []).join(', ') || 'no files'}${d.omitted?.length ? `; omitted ${d.omitted.join(', ')}` : ''}; index ${d.index}; ${d.stale ?? 0} stale fact(s)`;
     else if (e.type === 'route') line = `request routed (prompt ${d.prompt_chars} chars, not stored; intents ${d.intents?.join('+') || 'none'}) → ${d.selected?.map((s) => `${s.id} [${s.reasons.join(', ')}]`).join('; ') || 'no skill'}${d.capability_flags?.length ? `; capability flags: ${d.capability_flags.join(', ')}` : ''}`;
     else if (e.type === 'checkpoint') line = `checkpoint at ${d.event}${d.reason ? ` (${d.reason})` : ''}: ${d.branch ?? '?'} @ ${d.head ?? '?'}, ${d.changed} uncommitted change(s)`;
-    else if (e.type === 'enforcement') line = `BLOCKED ${d.tool} (capability ${d.capability} denied by user)`;
+    else if (e.type === 'enforcement') line = d.rule ? `BLOCKED ${d.tool} (guard: ${d.rule})` : `BLOCKED ${d.tool} (capability ${d.capability}: ${d.reason ?? 'denied by user'})`;
     else line = `${e.type}: ${JSON.stringify(d)}`;
     out(`- ${e.ts.slice(11, 19)} ${line}`);
   }
@@ -642,17 +763,47 @@ function cmdDoctor(flags) {
     last ? ok(`last session-start context: ${last.ts}`) : warn('no session-start context recorded from a real agent session yet');
   }
   const inst = installState(project);
+  const pathNode = spawnSync('sh', ['-c', 'command -v node'], { encoding: 'utf8' }).stdout.trim() || null;
   for (const [scope, m] of [['project', inst.local], ['global', inst.global]]) {
     if (!m) continue;
+    if (m.state && m.state !== 'complete') bad(`${scope}: setup was interrupted (state "${m.state}"); review with \`brain setup --dry-run\`, then \`brain repair\` or \`brain uninstall\``);
+    const integrity = verifyControllerFiles(m.controller?.files);
+    if (!integrity.recorded) warn(`${scope}: no controller checksums recorded (installed by an older version) — run brain repair`);
+    else if (integrity.ok) ok(`${scope}: controller files match the state approved at setup (${Object.keys(m.controller.files).length} files; trust-on-first-use, not proof of upstream authenticity)`);
+    else bad(`${scope}: controller files changed since setup — modified: ${integrity.modified.join(', ') || '—'}; missing: ${integrity.missing.join(', ') || '—'}; new: ${integrity.added.join(', ') || '—'}. Review (git diff/log in ${REPO_ROOT}), then brain repair`);
+    if (!exists(m.controller.node)) warn(`${scope}: recorded node ${m.controller.node} no longer exists; hooks fall back to PATH node (${pathNode ?? 'none found!'}${pathNode ? `, ${spawnSync(pathNode, ['--version'], { encoding: 'utf8' }).stdout.trim()}` : ''}) — run brain repair to record it`);
+    else ok(`${scope}: hook runtime ${m.controller.node}`);
     for (const e of m.entries.filter((x) => x.kind === 'claude-settings')) {
       const text = exists(e.path) ? fs.readFileSync(e.path, 'utf8') : null;
-      const n = text ? text.split(OWNER_MARK).length - 1 : 0;
-      n ? ok(`${scope}: ${n} owned Claude Code hook(s) in ${e.path}`) : bad(`${scope}: install record lists ${e.path} but no owned hooks are present — run brain repair`);
-      if (text && !text.includes(path.join(REPO_ROOT, 'bin', 'brain.js'))) bad(`${scope}: hooks point at a different controller path — run brain repair`);
-      if (text && !text.includes(process.execPath)) warn(`${scope}: hooks use node ${m.controller.node}; current node is ${process.execPath}${exists(m.controller.node) ? '' : ' (configured node no longer exists — run brain repair)'}`);
+      if (text === null) {
+        bad(`${scope}: ${e.path} is missing — run brain repair`);
+        continue;
+      }
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        bad(`${scope}: ${e.path} is not valid JSON`);
+        continue;
+      }
+      const expected = mergeClaudeSettings(parsed, m.controller, { enforceDenials: m.enforce_denials !== false });
+      const n = text.split(OWNER_MARK).length - 1;
+      if (JSON.stringify(expected.hooks ?? {}) === JSON.stringify(parsed.hooks ?? {})) ok(`${scope}: ${n} owned Claude Code hook(s) in ${e.path} match the expected configuration`);
+      else bad(`${scope}: owned hooks in ${e.path} are missing or were modified — review, then brain repair`);
+      if (e.hardening) {
+        const dw = parsed.sandbox?.filesystem?.denyWrite ?? [];
+        const missingDw = e.hardening.denyWrite.filter((x) => !dw.includes(x));
+        if (parsed.sandbox?.enabled === false) bad(`${scope}: hardening recorded but sandbox.enabled is false`);
+        else if (missingDw.length) bad(`${scope}: hardening denyWrite entries missing: ${missingDw.join(', ')}`);
+        else ok(`${scope}: OS sandbox hardening configured (effective only where Claude Code's sandbox runs)`);
+      }
     }
     const pkg = readJsonIfExists(path.join(REPO_ROOT, 'package.json'));
     if (m.controller.version !== pkg?.version) warn(`${scope}: configured with controller v${m.controller.version}, current is v${pkg?.version} — run brain repair`);
+  }
+  if (store.exists()) {
+    const st = loadState(store);
+    st.integrity.ok ? ok('consent policy log verifies') : bad(`consent policy integrity FAILED: ${st.integrity.error} (protected capabilities fail closed)`);
   }
   if (!inst.local && !inst.global) warn('no adapters configured (brain setup); manual CLI/file use only');
   out(problems ? `${problems} problem(s) found.` : 'No blocking problems found.');
@@ -709,6 +860,10 @@ export async function main(argv) {
   try {
     return (await fn(parsed.flags, rest)) ?? 0;
   } catch (e) {
+    if (e instanceof HumanApprovalRequired) {
+      process.stderr.write(`human approval required: ${e.message}\n`);
+      return 4;
+    }
     process.stderr.write(`${e instanceof UsageError ? '' : 'error: '}${e.message}\n`);
     return e instanceof UsageError ? 2 : 1;
   }

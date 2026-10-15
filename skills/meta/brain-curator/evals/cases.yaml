@@ -12,6 +12,13 @@ cases:
         - Uses a stable key such as db.primary
       must_not:
         - Records the fact without evidence
+    checks:
+      - criterion: "must[0]"
+        type: "brain_fact_matches"
+        pattern: "path: compose\\.yaml[\\s\\S]{0,160}locator: \\S"
+      - criterion: "must[1]"
+        type: "brain_fact_matches"
+        pattern: "key: \\S*(db|database)\\S*"
   - id: bc-typical-handoff
     kind: typical
     routing: true
@@ -23,6 +30,11 @@ cases:
         - Lists concrete next steps
       must_not:
         - Marks e2e tests as passed
+    checks:
+      - criterion: "must[0]"
+        type: "file_changed"
+        path: "^\\.agent-brain/handoffs/.+\\.md$"
+        partial: true
   - id: bc-typical-decision
     kind: typical
     routing: true
@@ -31,6 +43,14 @@ cases:
       must:
         - Proposes a decision record with the alternative and rationale
         - Asks the user to approve before it is accepted
+    checks:
+      - criterion: "must[0]"
+        type: "brain_proposal_created"
+        partial: true
+      - criterion: "must[1]"
+        type: "response_matches"
+        pattern: "approv"
+        partial: true
   - id: bc-edge-conflict
     kind: edge
     routing: false

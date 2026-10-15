@@ -1,0 +1,23 @@
+# Behavioural evaluation harness configuration (see docs/evaluation-guide.md).
+schema_version: 1
+# Workspace used when a case does not name one (evals/workspaces/<id>/).
+workspace_defaults:
+  project-initializer: node-app
+  brain-curator: node-app
+  codebase-explorer: node-app
+  task-planner: node-app
+  verification-before-completion: node-app
+  skill-author: empty
+  skill-reviewer: skill-audit
+  software-engineer: node-app
+  systematic-debugging: node-app-bug
+  test-driven-development: node-app
+  code-review: node-app-pr
+  documentation-engineering: docs-drift
+  business-analyst: notes
+  prd-writer: notes
+  web-research: notes
+  source-verification: notes
+  skill-package-audit: skill-audit
+# Skills whose workspace gets an initialised .agent-brain/ before the run.
+brain_skills: [brain-curator]

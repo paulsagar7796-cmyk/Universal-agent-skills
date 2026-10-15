@@ -47,6 +47,10 @@ jobs:
         run: node scripts/scan-secrets.js
       - name: Routing evaluations (offline)
         run: node scripts/run-evals.js
+      - name: Behavioural cases parse (no execution)
+        run: node scripts/eval.js list --json > /dev/null
+      - name: Offline mock behavioural suite (tests the harness, not skills)
+        run: node scripts/eval.js run --provider mock --judge mock --concurrency 4 --out "$RUNNER_TEMP/eval-results"
       - name: Unit, integration and end-to-end tests
         run: node --test tests/*.test.js
 

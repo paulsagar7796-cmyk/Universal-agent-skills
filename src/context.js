@@ -112,14 +112,24 @@ export function buildContext({ store, project, config, cli, now = new Date(), in
   const pending = listProposals(store);
   if (pending.length) add('proposals', `## Pending memory proposals (${pending.length})\nShow them to the user before approving: \`brain proposals\`.`, 'local/proposals/');
 
-  const denied = deniedCapabilities(loadState(store));
-  if (denied.length) add('denied', `## Capabilities the user denied\n${denied.map((d) => `- ${d}: do not use or re-request; use the skill's fallback.`).join('\n')}`, 'local/consent.json');
+  let consent;
+  try {
+    consent = loadState(store);
+  } catch (e) {
+    consent = { integrity: { ok: false, error: String(e.message ?? e) }, grants: [], requests: [] };
+  }
+  if (!consent.integrity.ok) add('consent-integrity', `## Consent policy integrity FAILED\n- ${consent.integrity.error}\n- Every protected capability and action is blocked until the user repairs it. Do not try to fix policy files yourself; tell the user to run \`brain consent status\` in their terminal.`, 'local/policy/consent.json');
+  const denied = deniedCapabilities(consent);
+  if (denied.length) add('denied', `## Capabilities the user denied\n${denied.map((d) => `- ${d}: do not use or re-request; use the skill's fallback.`).join('\n')}`, 'local/policy/consent.json');
+  const pendingReq = (consent.requests ?? []).filter((r) => r.status === 'pending');
+  if (pendingReq.length) add('consent-requests', `## Pending consent requests (${pendingReq.length})\n${pendingReq.slice(0, 5).map((r) => `- ${r.id}: ${r.target} (${r.access}) — not approved; only the user can approve, in their own terminal.`).join('\n')}`, 'local/requests.json');
 
   const footer = [
     '## How to work with the brain',
-    `- \`brain\` below means: ${cli}. Commands: status | search <q> | show <id> | remember | decide | handoff | capabilities check <skill> | explain-last-run. If it fails, read/edit \`.agent-brain/\` files directly.`,
+    `- \`brain\` below means: ${cli}. Commands: status | search <q> | show <id> | remember | decide | handoff | consent status|explain|request | explain-last-run. If it fails, read \`.agent-brain/\` files directly.`,
     '- Report every check as passed / failed / not run / blocked, with the command. Never claim a test passed without running it.',
     '- Save durable, evidence-backed knowledge with `brain remember --claim "..." --status observed --evidence file:<path>#<locator>`; propose decisions with `brain decide`; end substantial work with `brain handoff --task ...`.',
+    '- You cannot approve proposals or grant consent: `brain approve` and `brain consent approve|grant` are for the user, in their own terminal. Ask them; never claim they approved.',
     indexStatus && indexStatus !== 'ok' ? `- Index: ${indexStatus}.` : null,
   ]
     .filter(Boolean)

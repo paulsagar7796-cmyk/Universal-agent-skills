@@ -17,14 +17,25 @@ instructions that could cause an agent to act unsafely), templates and CI config
 Out of scope: third-party skills you install yourself, agent hosts (report to their vendors), and findings that require
 an attacker who can already modify your local files or agent configuration.
 
+## Reproducing a finding
+
+Add a failing test to `tests/security.test.js` (helpers: `hook('pre-tool-use', …)` for host behaviour, `tests/pty.js`
+for terminal paths) and run `node --test tests/security.test.js`. For behaviour of a real agent, include the host name
+and version and use a scratch project with a spend cap. See [docs/operations.md](docs/operations.md).
+
 ## Security properties we intend to hold
 
 - No code runs on clone or package install; there are no npm lifecycle scripts and no runtime dependencies.
 - `brain setup` changes only what its displayed plan lists, after consent; backups are written; `brain uninstall`
   removes only owned entries.
-- Hooks are bounded, recursion-guarded, never block except to enforce an explicit denial, and store no conversation content.
+- Hooks are bounded, recursion-guarded and store no conversation content. They block only: capabilities that are denied
+  or unapproved under the policy, protected tools when policy/registry integrity fails, and the agent's own attempts to
+  approve or edit policy and settings.
 - Secrets are rejected from brain files, the index, the trace and consent records (pattern-based; not perfect).
 - Connecting an integration never authorizes high-impact actions.
+- Grants and memory approvals require a person at a controlling terminal; agents can request but not approve.
+  This is a guardrail, not a boundary, against a process running as the same OS user — see
+  [docs/threat-model.md](docs/threat-model.md) (U1–U4) for what remains open.
 
 ## Skill withdrawal
 

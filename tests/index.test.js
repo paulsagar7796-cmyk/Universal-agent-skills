@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { makeRepo, NODE_FIXTURE, BRAIN_JS } from './helpers.js';
+import { makeRepo, NODE_FIXTURE, BRAIN_JS, REPO } from './helpers.js';
 import { resolveProject } from '../src/project.js';
 import { BrainStore } from '../src/store.js';
 import { initBrain } from '../src/init.js';
@@ -130,7 +130,9 @@ test('concurrent approvals from separate processes never lose a write', async ()
     props.map(
       (id) =>
         new Promise((resolve, reject) => {
-          const c = spawn(process.execPath, [BRAIN_JS, 'approve', id], { cwd: dir, stdio: 'ignore' });
+          // Separate processes calling the library directly (the CLI `approve` needs a person at a terminal).
+          const code = `import { resolveProject } from '${path.join(REPO, 'src/project.js')}'; import { BrainStore } from '${path.join(REPO, 'src/store.js')}'; import { applyProposal } from '${path.join(REPO, 'src/proposals.js')}'; applyProposal(new BrainStore(resolveProject(process.cwd())), '${id}');`;
+          const c = spawn(process.execPath, ['--input-type=module', '-e', code], { cwd: dir, stdio: 'ignore' });
           c.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`approve ${id} exited ${code}`))));
         }),
     ),

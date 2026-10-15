@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
-import { makeRepo, NODE_FIXTURE, brain, read, tmpDir } from './helpers.js';
-import { planSetup, applySetup, planUninstall, applyUninstall, smokeTest, mergeClaudeSettings, OWNER_MARK } from '../src/setup.js';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { makeRepo, NODE_FIXTURE, brain, hook, read, tmpDir } from './helpers.js';
+import { planSetup, applySetup, planUninstall, applyUninstall, smokeTest, mergeClaudeSettings, hookCommand, verifyControllerFiles, OWNER_MARK } from '../src/setup.js';
 
 const USER_SETTINGS = {
   permissions: { allow: ['Bash(npm test)'] },
@@ -45,8 +45,11 @@ test('project setup preserves unrelated settings, is idempotent, smoke-tests, an
   assert.deepEqual(s.permissions, USER_SETTINGS.permissions);
   assert.ok(s.hooks.SessionStart.some((g) => g.hooks[0].command === 'echo user-hook'));
   assert.deepEqual(s.hooks.PostToolUse, USER_SETTINGS.hooks.PostToolUse);
-  assert.equal(owned(s).length, 6, 'SessionStart, UserPromptSubmit, Stop, PreCompact, SessionEnd, PreToolUse');
-  assert.equal(s.hooks.PreToolUse.find((g) => g.hooks[0].command.includes(OWNER_MARK)).matcher, 'WebSearch|WebFetch|mcp__github__.*');
+  assert.equal(owned(s).length, 7, 'SessionStart, UserPromptSubmit, Stop, PreCompact, SessionEnd + 2 PreToolUse groups');
+  const pre = s.hooks.PreToolUse.filter((g) => g.hooks[0].command.includes(OWNER_MARK));
+  assert.deepEqual(pre.map((g) => g.matcher), ['WebSearch|WebFetch|mcp__github__.*', 'Bash|Edit|Write|NotebookEdit|MultiEdit']);
+  assert.equal(pre[0].hooks[0].onFailure, 'block', 'capability enforcement fails closed in the host');
+  assert.equal(pre[1].hooks[0].onFailure, undefined, 'the shell/edit guard does not paralyse the agent if the controller breaks');
   assert.ok(fs.existsSync(path.join(dir, '.agent-brain', 'facts.yaml')), 'brain initialised');
   const excl = read(path.join(dir, '.git', 'info', 'exclude'));
   assert.match(excl, /\.claude\/settings\.local\.json/);
@@ -125,7 +128,7 @@ test('mergeClaudeSettings replaces owned groups in place', () => {
   const twice = mergeClaudeSettings(once, ctrl);
   assert.deepEqual(twice, once);
   const moved = mergeClaudeSettings(once, { node: '/usr/bin/node', brainJs: '/new/path/brain.js' });
-  assert.equal(owned(moved).length, 6);
+  assert.equal(owned(moved).length, 7);
   assert.ok(owned(moved).every((h) => h.command.includes('/new/path/brain.js')));
   assert.throws(() => mergeClaudeSettings({}, { node: '/usr/bin/node', brainJs: '/tmp/a"b/brain.js' }), /unsafe/);
 });
@@ -147,7 +150,8 @@ test('CLI: non-interactive setup without --yes needs consent and changes nothing
   const again = brain(['setup', '--agent', 'claude-code', '--yes'], { cwd: dir, env: e });
   assert.match(again.out, /Already configured/);
   const doc = brain(['doctor'], { cwd: dir, env: e });
-  assert.match(doc.out, /6 owned Claude Code hook\(s\)/);
+  assert.match(doc.out, /7 owned Claude Code hook\(s\) in .* match the expected configuration/);
+  assert.match(doc.out, /controller files match the state approved at setup/);
   const un = brain(['uninstall', '--yes'], { cwd: dir, env: e });
   assert.equal(un.code, 0);
   assert.ok(!fs.existsSync(settings));
@@ -167,4 +171,68 @@ test('package.json declares no install-time lifecycle scripts', () => {
   const pkg = JSON.parse(read(path.join(process.cwd(), 'package.json')));
   for (const k of ['preinstall', 'install', 'postinstall', 'prepare', 'prepublish', 'prepublishOnly', 'preprepare', 'postprepare']) assert.equal(pkg.scripts?.[k], undefined, k);
   assert.deepEqual(pkg.dependencies ?? {}, {}, 'zero runtime dependencies');
+});
+
+test('--harden adds sandbox denyWrite + Edit deny rules idempotently, keeps user choices, and uninstalls exactly what it added', () => {
+  const { home, dir, settings } = env();
+  fs.mkdirSync(path.dirname(settings), { recursive: true });
+  fs.writeFileSync(settings, JSON.stringify({ sandbox: { allowUnsandboxedCommands: true, filesystem: { denyWrite: ['~/secret'] } }, permissions: { deny: ['Read(./.env)'] } }, null, 2));
+  const plan = planSetup({ cwd: dir, home, harden: true });
+  assert.ok(plan.warnings.some((w) => /OS sandbox/.test(w)));
+  applySetup(plan);
+  const s = JSON.parse(read(settings));
+  const policyDir = path.join(dir, '.agent-brain', 'local', 'policy');
+  assert.ok(s.sandbox.filesystem.denyWrite.includes(policyDir));
+  assert.ok(s.sandbox.filesystem.denyWrite.includes('~/secret'), 'user entry kept');
+  assert.equal(s.sandbox.enabled, true);
+  assert.equal(s.sandbox.allowUnsandboxedCommands, true, "an existing user choice is never overwritten");
+  assert.ok(s.permissions.deny.includes(`Edit(/${policyDir}/**)`));
+  assert.ok(s.permissions.deny.includes('Read(./.env)'));
+  assert.equal(planSetup({ cwd: dir, home, harden: true }).noop, true, 'idempotent');
+  applyUninstall(planUninstall({ cwd: dir, home }));
+  assert.deepEqual(JSON.parse(read(settings)), { sandbox: { allowUnsandboxedCommands: true, filesystem: { denyWrite: ['~/secret'] } }, permissions: { deny: ['Read(./.env)'] } });
+  assert.throws(() => planSetup({ cwd: dir, home, scope: 'global', harden: true }), /project scope only/);
+});
+
+test('hook command falls back to PATH node when the recorded node binary disappears', () => {
+  const { home, dir } = env();
+  const ctrl = { node: path.join(tmpDir(), 'gone', 'node'), brainJs: path.join(process.cwd(), 'bin', 'brain.js') };
+  const cmd = hookCommand(ctrl, 'session-start');
+  brain(['init'], { cwd: dir, env: { HOME: home } });
+  const r = spawnSync('/bin/sh', ['-c', cmd], { input: JSON.stringify({ session_id: 's', cwd: dir, source: 'startup' }), encoding: 'utf8', env: { ...process.env, PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin` } });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(JSON.parse(r.stdout).hookSpecificOutput.additionalContext, /Project brain/);
+});
+
+test('changed controller files are detected; repair re-records only after consent; registry drift fails closed', () => {
+  const { home, dir } = env();
+  applySetup(planSetup({ cwd: dir, home }));
+  const m = JSON.parse(read(path.join(dir, '.agent-brain', 'local', 'install.json')));
+  assert.equal(m.state, 'complete');
+  assert.ok(m.controller.files['integrations/capabilities.yaml']);
+  assert.equal(verifyControllerFiles(m.controller.files).ok, true);
+  // Simulate tampering with the recorded state instead of the real repository files.
+  m.controller.files['integrations/capabilities.yaml'] = 'f'.repeat(64);
+  m.controller.files['src/old-removed.js'] = 'a'.repeat(64);
+  fs.writeFileSync(path.join(dir, '.agent-brain', 'local', 'install.json'), JSON.stringify(m));
+  const v = verifyControllerFiles(m.controller.files);
+  assert.deepEqual([v.modified, v.missing], [['integrations/capabilities.yaml'], ['src/old-removed.js']]);
+  const blocked = hook('pre-tool-use', { session_id: 's', cwd: dir, tool_name: 'WebSearch', tool_input: {} });
+  assert.equal(blocked.code, 2, 'registry changed since setup → protected tools fail closed');
+  assert.match(blocked.err, /registry changed since setup/);
+  assert.equal(hook('pre-tool-use', { session_id: 's', cwd: dir, tool_name: 'Read', tool_input: {} }).code, 0);
+  const doc = brain(['doctor'], { cwd: dir, env: { HOME: home } });
+  assert.match(doc.out, /controller files changed since setup/);
+  const repair = planSetup({ cwd: dir, home });
+  assert.ok(repair.changes.some((c) => c.kind === 'record'), 're-recording is an explicit, consented change');
+  applySetup(repair);
+  assert.equal(hook('pre-tool-use', { session_id: 's', cwd: dir, tool_name: 'WebSearch', tool_input: {} }).code, 0);
+});
+
+test('an interrupted setup is visible to doctor', () => {
+  const { home, dir } = env();
+  applySetup(planSetup({ cwd: dir, home }));
+  const f = path.join(dir, '.agent-brain', 'local', 'install.json');
+  fs.writeFileSync(f, JSON.stringify({ ...JSON.parse(read(f)), state: 'applying' }));
+  assert.match(brain(['doctor'], { cwd: dir, env: { HOME: home } }).out, /setup was interrupted/);
 });

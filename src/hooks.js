@@ -11,10 +11,13 @@ import { loadConfig } from './config.js';
 import { buildContext, writeCheckpoint } from './context.js';
 import { openIndex } from './index-db.js';
 import { appendEvent, hashSession, makeEvent, pruneEvents, readEvents } from './events.js';
-import { loadRuntimeCatalog, loadCapabilityRegistry, REPO_ROOT } from './catalog.js';
+import fs from 'node:fs';
+import os from 'node:os';
+import { loadRuntimeCatalog, loadCapabilityRegistry, CAPABILITY_REGISTRY_FILE, REPO_ROOT } from './catalog.js';
 import { route } from './router.js';
-import { capabilityForTool, deniedCapabilities, evaluateSkill, loadState } from './broker.js';
-import { sha256, truncate } from './util.js';
+import { blockedCapabilities, capabilityForTool, evaluateSkill, FALLBACK_TOOL_PATTERNS, loadState } from './broker.js';
+import { checkToolCall } from './guard.js';
+import { readJsonIfExists, sha256, truncate } from './util.js';
 
 export const HOOK_EVENTS = {
   'session-start': 'SessionStart',
@@ -46,11 +49,74 @@ function checkpoint(store, project, event, payload, session, index) {
   return { duplicate: !fresh };
 }
 
+/** Has the capability registry changed since the user approved setup? (Hash recorded in install.json at setup time.) */
+export function registryDrift(project) {
+  const manifests = [path.join(project.brainDir, 'local', 'install.json'), path.join(os.homedir(), '.agent-skills-brain', 'install.json')];
+  for (const m of manifests) {
+    const expected = readJsonIfExists(m)?.controller?.files?.['integrations/capabilities.yaml'];
+    if (!expected) continue;
+    let actual = null;
+    try {
+      actual = sha256(fs.readFileSync(CAPABILITY_REGISTRY_FILE));
+    } catch {
+      /* missing */
+    }
+    if (actual !== expected) return 'the capability registry changed since setup was approved (review it, then run brain repair)';
+    return null;
+  }
+  return null;
+}
+
+function isProtectedToolName(tool) {
+  return FALLBACK_TOOL_PATTERNS.some((f) => f.re.test(tool));
+}
+
+/**
+ * PreToolUse: (1) guard against the agent changing policy/settings or approving its own requests;
+ * (2) block capabilities per the consent policy. Fails closed for protected tools when policy or registry is unusable.
+ */
+function preToolUse(store, project, config, p, { session, agent, registryLoader = loadCapabilityRegistry }) {
+  const tool = String(p.tool_name ?? '');
+  const g = checkToolCall(tool, p.tool_input, project.root);
+  if (g.block) {
+    appendEvent(store, makeEvent('enforcement', { tool, rule: g.rule, action: 'blocked' }, { session, agent }));
+    return { exitCode: 2, stderr: `Blocked by agent-skills-brain (${g.rule}): ${g.why}. If the user wants this change, they make it themselves in their own terminal (for consent: \`brain consent approve <request-id>\`).` };
+  }
+  let registry = null;
+  let registryError = null;
+  try {
+    registry = registryLoader();
+    if (!registry?.capabilities || typeof registry.capabilities !== 'object') throw new Error('registry has no capabilities');
+    if (registryLoader === loadCapabilityRegistry) {
+      const drift = registryDrift(project);
+      if (drift) throw new Error(drift);
+    }
+  } catch (e) {
+    registryError = String(e.message ?? e);
+  }
+  const hit = registry ? capabilityForTool(registry, tool) : null;
+  const fallbackHit = FALLBACK_TOOL_PATTERNS.find((f) => f.re.test(tool));
+  if (!hit && !(registryError && fallbackHit)) return { exitCode: 0 };
+  let state;
+  try {
+    state = loadState(store);
+  } catch (e) {
+    state = { integrity: { ok: false, error: `consent state unreadable (${String(e.message ?? e).slice(0, 120)})` }, grants: [], capabilities: {} };
+  }
+  const capId = hit?.capId ?? fallbackHit.capId;
+  let blocked;
+  if (registryError) blocked = { ids: [capId], reason: `capability registry unusable (${registryError.slice(0, 120)}); protected tools fail closed` };
+  else blocked = blockedCapabilities(state, registry, { mode: config.consent?.enforcement ?? 'denylist', session: p.session_id ?? null });
+  if (!blocked.ids.includes(capId)) return { exitCode: 0 };
+  appendEvent(store, makeEvent('enforcement', { tool, capability: capId, access: hit?.access ?? fallbackHit?.access, action: 'blocked', reason: blocked.reason.slice(0, 160) }, { session, agent }));
+  return { exitCode: 2, stderr: `Blocked by agent-skills-brain: capability "${capId}" is blocked for this project (${blocked.reason}), so ${tool} is not allowed. Use the skill's fallback. To change this, the user records a request (\`brain consent request ${capId}\`) and approves it themselves in their own terminal (\`brain consent approve <request-id>\`).` };
+}
+
 /**
  * Handle one hook delivery. Pure with respect to stdout/stderr: returns what to print.
  * @returns {{ exitCode: number, stdout?: string, stderr?: string }}
  */
-export function handleHook(agent, event, payload, { env = process.env } = {}) {
+export function handleHook(agent, event, payload, { env = process.env, registryLoader = loadCapabilityRegistry } = {}) {
   if (env.BRAIN_HOOK_ACTIVE === '1') return { exitCode: 0 };
   if (!SUPPORTED_AGENTS.includes(agent)) return { exitCode: 0, stderr: `brain: hook adapter "${agent}" is not implemented; ignoring.` };
   const eventName = HOOK_EVENTS[event];
@@ -66,16 +132,7 @@ export function handleHook(agent, event, payload, { env = process.env } = {}) {
     store = new BrainStore(project);
     const { config } = loadConfig(store.dir);
 
-    if (event === 'pre-tool-use') {
-      const tool = String(p.tool_name ?? '');
-      const registry = loadCapabilityRegistry();
-      const hit = capabilityForTool(registry, tool);
-      if (!hit) return { exitCode: 0 };
-      const state = loadState(store);
-      if (!deniedCapabilities(state, { session: p.session_id ?? null }).includes(hit.capId)) return { exitCode: 0 };
-      appendEvent(store, makeEvent('enforcement', { tool, capability: hit.capId, access: hit.access, action: 'blocked' }, { session, agent }));
-      return { exitCode: 2, stderr: `Blocked by agent-skills-brain: the user denied capability "${hit.capId}" for this project, so ${tool} is not allowed. Use the skill's fallback, or ask the user whether they want to re-enable it (\`brain consent grant ${hit.capId}\`).` };
-    }
+    if (event === 'pre-tool-use') return preToolUse(store, project, config, p, { session, agent, registryLoader });
 
     const opened = openIndex(store, { readEventsFn: () => readEvents(store) });
     index = opened.index;
@@ -121,6 +178,9 @@ export function handleHook(agent, event, payload, { env = process.env } = {}) {
       if (store) appendEvent(store, makeEvent('error', { hook: event, message: truncate(String(e?.message ?? e), 300) }, { session, agent }));
     } catch {
       /* trace unavailable; nothing else to do */
+    }
+    if (event === 'pre-tool-use' && store && isProtectedToolName(String(p.tool_name ?? ''))) {
+      return { exitCode: 2, stderr: `Blocked by agent-skills-brain: the consent check failed (${truncate(String(e?.message ?? e), 160)}), and ${p.tool_name} is a protected tool, so it fails closed. Ask the user to run \`brain doctor\` in their terminal.` };
     }
     if (event === 'session-start' || event === 'user-prompt-submit') {
       return { exitCode: 0, stdout: contextOutput(eventName, `[agent-skills-brain] Automatic project memory is unavailable this ${event === 'session-start' ? 'session' : 'turn'} (${truncate(String(e?.message ?? e), 200)}). The canonical files are still readable: start with .agent-brain/index.md. Run \`brain doctor\` to diagnose.`) };

@@ -2,6 +2,28 @@
 
 All notable changes are documented here. Format: Keep a Changelog; versions follow SemVer.
 
+## [Unreleased] — phase 2 (hardening + behavioural evaluation)
+
+### Security
+- Consent grants and memory approvals now require a person at a controlling terminal (typed random code); refused in
+  agent sessions, hooks and without a TTY. Agents can request, deny, revoke and reject only.
+- Consent decisions stored in a hash-chained policy log with a mirrored head; tampering, truncation or malformed files
+  fail closed for protected tools and actions. v1 `consent.json` is migrated keeping only denials/revocations.
+- Availability observations no longer authorize use; `proceed` needs a human grant plus a verified observation.
+- PreToolUse guard blocks self-approval commands, terminal emulation around the CLI, and edits to policy/settings/
+  controller files; capability hook uses `onFailure: "block"`; registry drift or load failure fails closed.
+- `brain setup --harden` (opt-in): Claude Code OS sandbox `denyWrite` for policy/config plus Edit deny rules.
+- `brain init` redacts credentials found in copied README text (found by a new adversarial test).
+- Allowlist enforcement mode; once-grants consumed by `brain authorize`.
+
+### Added
+- Behavioural evaluation harness (`scripts/eval.js`): mock and Claude Code providers, fixture workspaces, structured and
+  global safety checks, evidence-validated judge, human grading sheets, reports, re-runs, advisory release gate.
+- Structured checks on 40 of the 102 cases (48 of 181 expectations), workspace/requires/environment annotations.
+- Setup integrity: controller file checksums (trust on first use), journaled apply, PATH fallback for hook commands,
+  expanded `brain doctor`, consented re-recording via `brain repair`.
+- Docs: threat model, operations guide, proposed release policy; adversarial test suite.
+
 ## [0.1.0] — 2026-10-15 (unreleased MVP)
 
 ### Added

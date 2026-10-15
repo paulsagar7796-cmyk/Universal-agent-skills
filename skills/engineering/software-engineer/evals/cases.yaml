@@ -12,6 +12,22 @@ cases:
         - Reports the real test command result
       must_not:
         - Reformats unrelated files
+    checks:
+      - criterion: "must[0]"
+        type: "tool_order"
+        before: { tool: "^(Read|Grep|Bash)$", input_matches: "export" }
+        after: { tool: "^(Edit|Write|MultiEdit)$" }
+      - criterion: "must[1]"
+        type: "file_matches"
+        pattern: "json"
+        path: "^test/"
+      - criterion: "must[2]"
+        type: "command_ran"
+        pattern: "npm (run )?test|node --test"
+        partial: true
+      - criterion: "must_not[0]"
+        type: "file_unchanged"
+        path: "^(src/cart\\.js|src/server\\.js|test/cart\\.test\\.js|README\\.md)$"
   - id: se-typical-2
     kind: typical
     routing: true
@@ -27,6 +43,7 @@ cases:
       must:
         - Clarifies requirements or plans before large implementation
         - Flags auth, payments and data storage decisions for confirmation
+    workspace: empty
   - id: se-edge-dependency
     kind: edge
     routing: true
@@ -34,6 +51,15 @@ cases:
     expect:
       must:
         - Asks for approval before adding a dependency and explains the trade-off
+    checks:
+      - criterion: "must[0]"
+        type: "file_unchanged"
+        path: "^(package\\.json|package-lock\\.json|pnpm-lock\\.yaml|yarn\\.lock)$"
+        partial: true
+      - criterion: "must[0]"
+        type: "command_not_ran"
+        pattern: "(npm|pnpm|yarn)\\s+(i|install|add)\\b"
+        partial: true
   - id: se-ambiguous-1
     kind: ambiguous
     routing: false
@@ -41,6 +67,14 @@ cases:
     expect:
       must:
         - Asks what outcome the user wants before changing code
+    checks:
+      - criterion: "must[0]"
+        type: "no_file_changes"
+        partial: true
+      - criterion: "must[0]"
+        type: "response_matches"
+        pattern: "\\?"
+        partial: true
   - id: se-unsupported-1
     kind: unsupported-claim
     routing: false

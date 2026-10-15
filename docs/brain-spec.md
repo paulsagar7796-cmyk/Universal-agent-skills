@@ -19,7 +19,7 @@ and intended to be committed. `local/` is machine-local runtime state and is git
 | `handoffs/YYYY-MM-DD-HHMM-<slug>.md` | Restart notes (UTC timestamps) | `brain handoff` |
 | `evidence/` | Small artifacts referenced by facts | anyone |
 | `config.yaml` | Context budget, auto-accept policy, retention, routing thresholds | humans |
-| `local/` | `index.sqlite`, `events.jsonl`, `consent.json`, `checkpoints/last.json`, `proposals/`, `backups/`, `install.json`, lock files | controller |
+| `local/` | `index.sqlite`, `events.jsonl`, `policy/consent.json` + `policy/head.json` (hash-chained consent log), `requests.json` (requests + restrictions), `capabilities.json` (observations), `checkpoints/last.json`, `proposals/`, `backups/`, `install.json`, lock files | controller |
 
 Generated sections are delimited by `<!-- brain:generated:<name>:begin … -->` / `<!-- brain:generated:<name>:end -->`.
 Text outside the markers is never modified by the controller.
@@ -104,10 +104,22 @@ error, …), `agent`, `session` (hashed), `data`. Never contains prompt text, as
 credentials; route events keep the prompt's hash and length plus which catalog trigger words matched. Retention:
 `retention.events_days` (default 30) and `retention.max_event_lines` (default 5000), applied at session start.
 
-## Consent state (`local/consent.json`)
+## Consent state
 
-`capabilities` (current state per capability id), `grants` (append-only decisions: target, decision, access, scope,
-session, expires_at, note), `history` (last 500 transitions). Capability states:
-`not_needed → missing → consent_requested → user_denied | user_approved → host_setup_pending → connected_unverified →
-available → revoked | expired | error`. `available` requires recorded evidence of a real check and the verified access
-level(s).
+Schema: [schemas/consent-policy.schema.json](../schemas/consent-policy.schema.json). Details: [security-model.md](security-model.md).
+
+- `local/policy/consent.json` — append-only log `{schema_version: 2, entries: [...]}`. Each entry: `seq`, `ts`,
+  `target` (capability id or `action:<name>`), `decision` (`granted` | `denied` | `revoked` | `consumed`), `access`,
+  `scope` (`once` | `session` | `project`), optional `session`, `expires_at`, `note`, `request_id`, `grant_id`;
+  `actor` (`human` for grants, which also need `via: tty-challenge`); `prev` (hash of the previous entry, `GENESIS`
+  first) and `hash` (SHA-256 over `prev` + the canonical entry). `local/policy/head.json` and
+  `~/.agent-skills-brain/policy-heads/<project-id>.json` hold `{count, hash}` of the last entry.
+  Any mismatch → integrity failure → protected capabilities and actions fail closed.
+- `local/requests.json` — `requests` (pending/approved/rejected; no effect until a human approves) and `restrictions`
+  (deny/revoke recorded when the policy log is not writable, e.g. inside a sandbox). Unreadable → fail closed.
+- `local/capabilities.json` — observations (`missing`, `host_setup_pending`, `connected_unverified`, `available`,
+  `expired`, `error`). Observations never authorize anything; `available` requires evidence and access levels.
+- Effective decision for a target = the latest active entry (expired, consumed and other-session grants ignored;
+  grants count only from human entries).
+- The v1 `local/consent.json` is migrated once: denials/revocations become restrictions, grants are dropped (they were
+  not human-approved), observations are kept; the old file is renamed `consent.v1.migrated-<ts>.json`.
