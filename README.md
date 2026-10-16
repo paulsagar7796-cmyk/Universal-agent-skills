@@ -184,3 +184,4 @@ node scripts/validate-skills.js && node scripts/build-catalog.js --check && node
 
 Apache-2.0 for first-party code and skills ([LICENSE](LICENSE)). Imported skills must keep their own license and
 provenance in their manifest.
+
